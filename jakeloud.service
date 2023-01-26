@@ -1,0 +1,12 @@
+[Unit]
+Description=Jakeloud
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/env node /etc/jakeloud/jakeloud/server.js
+
+[Install]
+WantedBy=multi-user.target
