@@ -18,8 +18,6 @@ const fullReloadApp = async (name) => {
   app.state = 'starting'
   await setApp(name, app)
   // here we stop&remove previously running instance
-  await app.stop()
-  await app.remove(false)
   await app.start()
   if ((await getApp(name)).state != 'starting') return
 

@@ -76,7 +76,7 @@ server {
     await execWrapped(`docker build -t ${this.repo.toLowerCase()} /etc/jakeloud/${this.repo}`)
   }
   async start() {
-    await execWrapped(`if [ -z "$(sudo docker ps -q -f name=landing)" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
+    await execWrapped(`if [ -z "$(sudo docker ps -q -f name=${this.name})" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
     await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${this.repo.toLowerCase()}`)
   }
   async stop() {
