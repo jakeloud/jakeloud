@@ -1,0 +1,6 @@
+* {font-family: Arial; font-size: 1.1rem}
+#root {display: flex; flex-direction: column; justify-content: center; align-items: center;}
+button { background: #ccc8; border-radius: 9999px; padding: 0.5rem; border: none; box-shadow: 1px 1px 4px #0004; cursor: pointer;}
+form, p { display: flex; flex-direction: column; max-width: 50ch;}
+input { border-radius: 9999px; padding: 0.5rem; border: 2px solid #ccc8; margin: 0.5rem; width: max-content;}
+label { width: 100%; display: flex; justify-content: space-between; align-items: center;}

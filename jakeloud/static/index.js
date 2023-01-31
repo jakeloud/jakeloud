@@ -65,7 +65,7 @@ const handleCreateApp = async (e) => {
   e.preventDefault()
 }
 
-add.onclick = () => {
+add = () => {
   const form = document.createElement('form')
   const p = document.createElement('p')
   p.innerText = 'Enter github repo in a format <user>/<repo>. This repo must be public.'
@@ -79,8 +79,15 @@ add.onclick = () => {
 }
 
 const App = (app) => {
-  const el = document.createElement('p')
+  const el = document.createElement('pre')
   el.innerText = JSON.stringify(app)
+  el.innerHTML =
+`<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
+repo: ${app.repo}
+owner: ${app.email}
+<big>status: ${app.state}</big>
+<button onclick='post("/create-app", ${JSON.stringify(app)})'>full reboot</button>
+`
   return el
 }
 
@@ -111,7 +118,10 @@ const getConf = async () => {
     root.append(form)
     return
   }
-  root.append(...json.apps.map(App))
+  const but = document.createElement('button')
+  but.innerText = 'add app'
+  but.onclick=add
+  root.append(but, ...json.apps.map(App))
 }
 
 onload=getConf()
