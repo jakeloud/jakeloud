@@ -16,6 +16,10 @@ const execWrapped = (cmd) =>
     )
   })
 
+const updateJakeloud = async () => {
+  await execWrapped('sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/notTGY/jakeloud/main/install.sh)"')
+}
+
 const setConf = (json) => writeFileSync(CONF_FILE, JSON.stringify(json))
 
 const getConf = async () => {
@@ -31,7 +35,8 @@ const getConf = async () => {
     conf = FALLBACK_CONF
   }
   const apps = conf.apps.map(app => new App(app))
-  return { apps, users: conf.users }
+  conf.apps = apps
+  return conf
 }
 
 class App {
@@ -50,7 +55,7 @@ class App {
   async proxy() {
     const content = `
 server {
-  listen 80${this.name === JAKELOUD ? ' default_server' : ''};
+  listen 80;
   server_name ${this.domain};
 
   location / {
@@ -62,9 +67,9 @@ server {
 
     const file = this.name === JAKELOUD ? 'default' : this.name
     writeFileSync(`/etc/nginx/sites-available/${file}`, content)
-    if (!existsSync(`/etc/nginx/sites-enabled/${file}`)) {
+    if (!existsSync(`/etc/nginx/sites-enabled/${file}`))
       linkSync(`/etc/nginx/sites-available/${file}`, `/etc/nginx/sites-enabled/${file}`)
-    }
+
     await execWrapped(`sudo systemctl restart nginx`)
   }
 
@@ -97,18 +102,18 @@ const getApp = async (name) => {
   return apps.find(app => app.name === name)
 }
 const setApp = async (name, newApp) => {
-  const { users, apps } = await getConf()
-  if (apps.find(app => app.name === name)) {
-    const newApps = apps.map(app => app.name === name ? newApp : app)
-    await setConf({users, apps: newApps})
+  const conf = await getConf()
+  if (conf.apps.find(app => app.name === name)) {
+    conf.apps = conf.apps.map(app => app.name === name ? newApp : app)
+    await setConf(conf)
   } else {
-    apps.push(newApp)
-    await setConf({users, apps})
+    conf.apps.push(newApp)
+    await setConf(conf)
   }
 }
 
 const isAuthenticated = async (body) => {
-  const { users, apps } = await getConf()
+  const { users } = await getConf()
   const { password, email } = body
   if (users.length === 0 || !password || !email) return false
   const user = users.find(u => u.email === email)
@@ -118,11 +123,11 @@ const isAuthenticated = async (body) => {
 }
 
 const setUser = async (email, password) => {
-  const { users, apps } = await getConf()
+  const conf = await getConf()
   const salt = crypto.randomBytes(128).toString('base64')
   const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512')
-  const newUsers = [{email, hash, salt}]
-  await setConf({users: newUsers, apps})
+  conf.users.push({email, hash, salt})
+  await setConf(conf)
 }
 
 module.exports = {
@@ -134,4 +139,5 @@ module.exports = {
   setConf,
   isAuthenticated,
   setUser,
+  updateJakeloud,
 }

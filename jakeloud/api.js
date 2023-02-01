@@ -1,4 +1,4 @@
-const { App, getApp, setApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated } = require('./entities.js')
+const { App, getApp, setApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated, updateJakeloud } = require('./entities.js')
 
 const fullReloadApp = async (name) => {
   let app
@@ -7,7 +7,6 @@ const fullReloadApp = async (name) => {
   await setApp(name, app)
   await app.clone()
   if ((await getApp(name)).state != 'cloning') return
-
   app = await getApp(name)
   app.state = 'building'
   await setApp(name, app)
@@ -97,6 +96,17 @@ const postRoutes = {
     await setApp(name, newApp)
     res.write('ok')
     fullReloadApp(name)
+  },
+  '/api': async (req, res, body) => {
+    const { users } = await getConf()
+    switch (body.op) {
+      case 'update-jakeloud':
+        if (!await isAuthenticated(body)) return
+        updateJakeloud()
+        break
+      default:
+        res.write('{"message":"noop"}')
+    }
   },
 }
 

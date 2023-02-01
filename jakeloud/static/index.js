@@ -31,8 +31,8 @@ const handleJakeloudDomain = (e) => {
     email: data.get('email'),
     domain: data.get('domain'),
   }
-  root.innerHTML = 'Setting up domain. Update to see changes.'
   post('/set-jakeloud-domain', body)
+  window.replace(`https://${domain}`)
 }
 const handleRegister = async (e) => {
   e.preventDefault()
@@ -65,6 +65,11 @@ const handleCreateApp = async (e) => {
   e.preventDefault()
 }
 
+handleUpdateJakeloud = async () => {
+  const body = { op: 'update-jakeloud' }
+  await post('/api', body)
+}
+
 add = () => {
   const form = document.createElement('form')
   const p = document.createElement('p')
@@ -78,15 +83,29 @@ add = () => {
   root.append(form)
 }
 
+// https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
+const createFileUrl = (content) => {
+  const file = new File(["\ufeff"+content], '', {type: "text/plain:charset=UTF-8"});
+
+  return window.URL.createObjectURL(file);
+}
+
 const App = (app) => {
   const el = document.createElement('pre')
   el.innerText = JSON.stringify(app)
+
+  let buttonHTML = ''
+  if (app.name === 'jakeloud') {
+    buttonHTML = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
+  } else {
+    buttonHTML = `<button onclick='post("/create-app", ${JSON.stringify(app)})'>full reboot</button>`
+  }
   el.innerHTML =
 `<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>
-<button onclick='post("/create-app", ${JSON.stringify(app)})'>full reboot</button>
+${buttonHTML}
 `
   return el
 }
@@ -121,7 +140,12 @@ const getConf = async () => {
   const but = document.createElement('button')
   but.innerText = 'add app'
   but.onclick=add
-  root.append(but, ...json.apps.map(App))
+
+  const downloadConf = document.createElement('a')
+  downloadConf.download = 'conf.json'
+  downloadConf.innerText = 'Download conf.json'
+  downloadConf.href = createFileUrl(JSON.stringify(json))
+  root.append(but, downloadConf, ...json.apps.map(App))
 }
 
 onload=getConf()
