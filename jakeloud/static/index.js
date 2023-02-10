@@ -1,3 +1,5 @@
+let conf
+
 const setLoginData = (pwd, email) => {
   window.localStorage.setItem('pwd', pwd)
   window.localStorage.setItem('email', email)
@@ -7,10 +9,10 @@ const getLoginData = () => {
   email = window.localStorage.getItem('email')
   return { password, email }
 }
-const post = async (url, obj = {}) =>
-  await fetch(url, {
+const api = async (op, obj = {}) =>
+  await fetch('/api', {
     method: 'POST',
-    body: JSON.stringify({...getLoginData(), ...obj}),
+    body: JSON.stringify({op, ...getLoginData(), ...obj}),
   })
 
 const Field = (name) => {
@@ -31,7 +33,7 @@ const handleJakeloudDomain = (e) => {
     email: data.get('email'),
     domain: data.get('domain'),
   }
-  post('/set-jakeloud-domain', body)
+  api('set-jakeloud-domain', body)
   window.replace(`https://${domain}`)
 }
 const handleRegister = async (e) => {
@@ -43,7 +45,7 @@ const handleRegister = async (e) => {
     password: data.get('password'),
   }
   root.innerHTML = 'Registering...'
-  await post('/register', body)
+  await api('register', body)
   getConf()
 }
 const handleLogin = (e) => {
@@ -58,26 +60,25 @@ const handleCreateApp = async (e) => {
     domain: data.get('domain'),
     name: data.get('name'),
     repo: data.get('repo'),
+    vcs: data.get('vcs'),
   }
   root.innerHTML = 'Creating app. Refresh to track progress in real time'
-  await post('/create-app', body)
+  await api('create-app', body)
   getConf()
   e.preventDefault()
 }
 
-handleUpdateJakeloud = async () => {
-  const body = { op: 'update-jakeloud' }
-  await post('/api', body)
-}
+handleUpdateJakeloud = async () => await api('update-jakeloud')
 
 add = () => {
   const form = document.createElement('form')
-  const p = document.createElement('p')
-  p.innerText = 'Enter github repo in a format <user>/<repo>. This repo must be public.'
+  const pre = document.createElement('pre')
+  pre.innerText = `Enter git vcs root in a format "<user>:<token>@<host>".
+Enter github repo in a format "<user>/<repo>".`
 
   const submit = document.createElement('button')
   submit.innerText = 'create app'
-  form.append(Field('name'), Field('domain'), Field('repo'), submit, p)
+  form.append(Field('name'), Field('domain'), Field('vcs'), Field('repo'), submit, pre)
   form.onsubmit = handleCreateApp
   root.innerHTML = ''
   root.append(form)
@@ -92,13 +93,12 @@ const createFileUrl = (content) => {
 
 const App = (app) => {
   const el = document.createElement('pre')
-  el.innerText = JSON.stringify(app)
 
   let buttonHTML = ''
   if (app.name === 'jakeloud') {
     buttonHTML = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
   } else {
-    buttonHTML = `<button onclick='post("/create-app", ${JSON.stringify(app)})'>full reboot</button>`
+    buttonHTML = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
   }
   el.innerHTML =
 `<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
@@ -110,13 +110,27 @@ ${buttonHTML}
   return el
 }
 
+const AppsTab = () => {
+  const but = document.createElement('button')
+  but.innerText = 'add app'
+  but.onclick=add
+
+  const downloadConf = document.createElement('a')
+  downloadConf.download = 'conf.json'
+  downloadConf.innerText = 'Download conf.json'
+  downloadConf.href = createFileUrl(JSON.stringify(conf))
+
+  root.innerHTML = ''
+  root.append(but, downloadConf, ...conf.apps.map(App))
+}
+
 const getConf = async () => {
-  const res = await post('/get-conf')
-  const json = await res.json()
-  if (json.message) {
+  const res = await api('get-conf')
+  conf = await res.json()
+  if (conf.message) {
     const form = document.createElement('form')
     const submit = document.createElement('button')
-    switch (json.message) {
+    switch (conf.message) {
       case 'domain':
         submit.innerText = 'assign domain'
         form.append(Field('email'), Field('domain'), submit)
@@ -137,15 +151,7 @@ const getConf = async () => {
     root.append(form)
     return
   }
-  const but = document.createElement('button')
-  but.innerText = 'add app'
-  but.onclick=add
-
-  const downloadConf = document.createElement('a')
-  downloadConf.download = 'conf.json'
-  downloadConf.innerText = 'Download conf.json'
-  downloadConf.href = createFileUrl(JSON.stringify(json))
-  root.append(but, downloadConf, ...json.apps.map(App))
+  AppsTab()
 }
 
 onload=getConf()

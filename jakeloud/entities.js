@@ -40,17 +40,18 @@ const getConf = async () => {
 }
 
 class App {
-  constructor({name, domain, repo, port, state, email}) {
+  constructor({name, domain, repo, port, state, email, vcs}) {
     this.name = name
     this.domain = domain
     this.repo = repo
-    this.port = port
     this.state = state
     this.email = email
+    this.vcs = vcs
+    this.port = port
   }
   async clone() {
     await execWrapped(`rm -rf /etc/jakeloud/${this.repo}`)
-    await execWrapped(`git clone https://github.com/${this.repo}.git /etc/jakeloud/${this.repo}`)
+    await execWrapped(`git clone https://${this.vcs}/${this.repo}.git /etc/jakeloud/${this.repo}`)
   }
   async proxy() {
     const content = `

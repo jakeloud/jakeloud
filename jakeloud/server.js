@@ -4,7 +4,7 @@ const path = require('path')
 const { readFileSync } = require('fs')
 
 const { App, getApp, setApp, JAKELOUD, getConf, setConf } = require('./entities.js')
-const { postRoutes } = require('./api.js')
+const { api } = require('./api.js')
 
 const fileCache = {}
 const server = http.createServer(async (req, res) => {
@@ -36,7 +36,7 @@ const server = http.createServer(async (req, res) => {
             parsedBody = {}
           }
           try {
-            await postRoutes[pathname](req, res, parsedBody)
+            await api(req, res, parsedBody)
             resolve()
           } catch(e) {
             console.log(e)
