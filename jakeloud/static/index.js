@@ -95,17 +95,19 @@ const App = (app) => {
   const el = document.createElement('pre')
 
   let buttonHTML = ''
+  let secondButton = ''
   if (app.name === 'jakeloud') {
     buttonHTML = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
   } else {
     buttonHTML = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
+    secondButton = `<button onclick='api("delete-app", ${JSON.stringify(app)})'>delete</button>`
   }
   el.innerHTML =
 `<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>
-${buttonHTML}
+${buttonHTML} ${secondButton}
 `
   return el
 }

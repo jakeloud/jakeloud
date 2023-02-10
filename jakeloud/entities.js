@@ -89,7 +89,11 @@ server {
     await execWrapped(`docker stop ${this.name}`)
   }
   async remove(removeRepo) {
-    const proms = [execWrapped(`docker rm ${this.name}`)]
+    const proms = [
+      execWrapped(`docker rm ${this.name}`),
+      execWrapped(`rm -f /etc/nginx/sites-available/${this.name}`),
+      execWrapped(`rm -f /etc/nginx/sites-enabled/${this.name}`),
+    ]
     if (removeRepo) {
       proms.push(execWrapped(`docker image rm ${this.repo} && rm -r /etc/jakeloud/${this.repo}`))
     }

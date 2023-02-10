@@ -39,6 +39,19 @@ const fullReloadApp = async (name) => {
   await setApp(name, app)
 }
 
+const deleteApp = async (name) => {
+  const app = await getApp(name)
+  await app.stop()
+
+  const conf = await getConf()
+  const isRepoUsedElsewhere = conf.apps.filter(a => a.repo === app.repo).length > 1
+  await app.remove(!isRepoUsedElsewhere)
+
+  const syncConf = await getConf()
+  syncConf.apps = syncConf.apps.filter(a => a.name !== name)
+  await setConf(syncConf)
+}
+
 const setJakeloudDomainOp = async (req, res, body) => {
   const conf = await getConf()
   const { email, domain } = body
@@ -97,6 +110,9 @@ const createAppOp = async (req, res, body) => {
   fullReloadApp(name)
 }
 
+const deleteAppOp = async (req, res, body) => {
+}
+
 const api = async (req, res, body) => {
   switch (body.op) {
     case 'set-jakeloud-domain':
@@ -110,6 +126,11 @@ const api = async (req, res, body) => {
       break
     case 'create-app':
       await createAppOp(req, res, body)
+      break
+    case 'delete-app':
+      const { name } = body
+      if (!await isAuthenticated(body) |!name) return
+      deleteApp(name)
       break
     case 'update-jakeloud':
       if (!await isAuthenticated(body)) return
