@@ -12,7 +12,7 @@ const FALLBACK_CONF = {
 const execWrapped = (cmd) =>
   new Promise((resolve, reject) => {
     exec(cmd, (error, stdout, stderr) =>
-      error ? reject(error) : resolve()
+      error ? reject(error) : resolve(stdout)
     )
   })
 
@@ -22,7 +22,7 @@ const updateJakeloud = async () => {
 
 const setConf = (json) => writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
 
-const getConf = async () => {
+const getConf = async ({email, sudo} = {}) => {
   let conf
   try {
     if (existsSync(CONF_FILE)) {
@@ -34,13 +34,13 @@ const getConf = async () => {
   } catch(e) {
     conf = FALLBACK_CONF
   }
-  const apps = conf.apps.map(app => new App(app))
+  const apps = conf.apps.map(app => new App(app)).filter(app => sudo || app.email === email)
   conf.apps = apps
   return conf
 }
 
 class App {
-  constructor({name, domain, repo, port, state, email, vcs}) {
+  constructor({name, domain, repo, port, state, email, vcs, additional}) {
     this.name = name
     this.domain = domain
     this.repo = repo
@@ -48,6 +48,7 @@ class App {
     this.email = email
     this.vcs = vcs
     this.port = port
+    this.additional = additional
   }
   async clone() {
     await execWrapped(`rm -rf /etc/jakeloud/${this.repo}`)
@@ -103,11 +104,11 @@ server {
 }
 
 const getApp = async (name) => {
-  const { users, apps } = await getConf()
+  const { users, apps } = await getConf({sudo: true})
   return apps.find(app => app.name === name)
 }
 const setApp = async (name, newApp) => {
-  const conf = await getConf()
+  const conf = await getConf({sudo: true})
   if (conf.apps.find(app => app.name === name)) {
     conf.apps = conf.apps.map(app => app.name === name ? newApp : app)
     await setConf(conf)
@@ -122,6 +123,7 @@ const isAuthenticated = async (body) => {
   const { password, email } = body
   if (users.length === 0 || !password || !email) return false
   const user = users.find(u => u.email === email)
+  if (!user) return false
   const { hash, salt } = user
   const encryptHash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512')
   return crypto.timingSafeEqual(Buffer.from(hash), encryptHash)

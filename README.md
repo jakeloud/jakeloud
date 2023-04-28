@@ -3,18 +3,21 @@
 ## Setup process
 1. run this in terminal.
 ```
-ssh <login>@<ip> sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/notTGY/jakeloud/main/install.sh)"
+ssh <login>@<ip>
+sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/notTGY/jakeloud/main/install.sh)"
 ```
-2. Go to server ip in browser. Enter domain for jakeloud dashboard (ex. `jakeloud.example.com`). At this point server is setuping ssl cert and becomes unresponsive, so wait ~5min.
-3. Go to your domain. Input password you will use to access you dashboard.
-4. Done!!!
+2. Go to server ip in browser. Enter domain for jakeloud dashboard (ex. `jakeloud.example.com`) and root user email. At this point server is setuping ssl cert and becomes unresponsive, so wait ~5min.
+3. Go to your domain. Register root user with the same email.
 
+## Adding new user
+1. Go to your domain and login into root user.
+2. Tick "Allow Registration" checkbox under jakeloud settings.
+3. Register new user.
+4. Untick "Allow Registration" checkbox under jakeloud settings.
 ## Goals
 1. Jakeloud is intended for customisation and intense
 extensibility. So I would like it to be as small as
-possible. I'd go for 1000 lines of code limit,
-but this is hard limit, so if possible,
-I'd like to make it in 500 or even 300.
+possible. I'd go for 1000 lines of code limit.
 2. Secure, robust system that can handle reboots and
 partial reloads.
 3. Low footprint and maximum possible performance

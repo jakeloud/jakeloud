@@ -10,7 +10,8 @@ const getLoginData = () => {
   return { password, email }
 }
 const api = async (op, obj = {}) =>
-  await fetch('/api', {
+  await fetch('https://jakeloud.yam.pw/api', {
+    mode: 'no-cors',
     method: 'POST',
     body: JSON.stringify({op, ...getLoginData(), ...obj}),
   })
@@ -24,6 +25,16 @@ const Field = (name) => {
   label.innerText = name
   label.append(input)
   return label
+}
+
+const Form = (onSubmit, submitText, ...fields) => {
+  const form = document.createElement('form')
+  const submit = document.createElement('button')
+  submit.innerText = submitText
+  form.onsubmit = onSubmit
+  form.append(...fields)
+  form.append(submit)
+  return form
 }
 
 const handleJakeloudDomain = (e) => {
@@ -71,17 +82,11 @@ const handleCreateApp = async (e) => {
 handleUpdateJakeloud = async () => await api('update-jakeloud')
 
 add = () => {
-  const form = document.createElement('form')
   const pre = document.createElement('pre')
   pre.innerText = `Enter git vcs root in a format "<user>:<token>@<host>".
 Enter github repo in a format "<user>/<repo>".`
-
-  const submit = document.createElement('button')
-  submit.innerText = 'create app'
-  form.append(Field('name'), Field('domain'), Field('vcs'), Field('repo'), submit, pre)
-  form.onsubmit = handleCreateApp
   root.innerHTML = ''
-  root.append(form)
+  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('vcs'), Field('repo'), pre))
 }
 
 // https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
@@ -91,13 +96,21 @@ const createFileUrl = (content) => {
   return window.URL.createObjectURL(file);
 }
 
+const handleRegisterAllowed = (registerAllowed) => {
+  api('set-jakeloud-additional', {additional: {registerAllowed}})
+}
+
 const App = (app) => {
   const el = document.createElement('pre')
+  const additional = app.additional ?? {}
 
   let buttonHTML = ''
   let secondButton = ''
   if (app.name === 'jakeloud') {
     buttonHTML = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
+    secondButton = `<label for="a">Registration allowed
+  <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick="handleRegisterAllowed(event.target.checked)"/>
+</label>`
   } else {
     buttonHTML = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
     secondButton = `<button onclick='api("delete-app", ${JSON.stringify(app)})'>delete</button>`
@@ -113,9 +126,13 @@ ${buttonHTML} ${secondButton}
 }
 
 const AppsTab = () => {
-  const but = document.createElement('button')
-  but.innerText = 'add app'
-  but.onclick=add
+  const addApp = document.createElement('button')
+  addApp.innerText = 'add app'
+  addApp.onclick=add
+
+  const logout = document.createElement('button')
+  logout.innerText = 'logout'
+  logout.onclick = setLoginData.bind(null, [null, null])
 
   const downloadConf = document.createElement('a')
   downloadConf.download = 'conf.json'
@@ -123,37 +140,35 @@ const AppsTab = () => {
   downloadConf.href = createFileUrl(JSON.stringify(conf))
 
   root.innerHTML = ''
-  root.append(but, downloadConf, ...conf.apps.map(App))
+  root.append(addApp, logout, downloadConf, ...conf.apps.map(App))
+}
+
+const confHandler = {
+  domain: () => {
+    root.innerHTML = ''
+    root.append(Form(handleJakeloudDomain, 'assign domain', Field('email'), Field('domain')))
+  },
+  login: () => {
+    root.innerHTML = ''
+    root.append(
+      Form(handleLogin, 'login', Field('email'), Field('password')),
+      Form(handleRegister, 'register', Field('email'), Field('password'))
+    )
+  },
+  register: () => {
+    root.innerHTML = ''
+    root.append(Form(handleRegister, 'register', Field('email'), Field('password'), submit))
+  }
 }
 
 const getConf = async () => {
   const res = await api('get-conf')
   conf = await res.json()
   if (conf.message) {
-    const form = document.createElement('form')
-    const submit = document.createElement('button')
-    switch (conf.message) {
-      case 'domain':
-        submit.innerText = 'assign domain'
-        form.append(Field('email'), Field('domain'), submit)
-        form.onsubmit = handleJakeloudDomain
-        break
-      case 'register':
-        submit.innerText = 'register'
-        form.append(Field('email'), Field('password'), submit)
-        form.onsubmit = handleRegister
-        break
-      case 'login':
-        submit.innerText = 'login'
-        form.append(Field('email'), Field('password'), submit)
-        form.onsubmit = handleLogin
-        break
-    }
-    root.innerHTML = ''
-    root.append(form)
-    return
+    confHandler[conf.message]()
+  } else{
+    AppsTab()
   }
-  AppsTab()
 }
 
 onload=getConf()
