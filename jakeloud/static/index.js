@@ -101,6 +101,7 @@ const handleRegisterAllowed = (registerAllowed) => {
 }
 
 const App = (app) => {
+  // TODO: refactor and add on-premise dev server
   const el = document.createElement('pre')
   const additional = app.additional ?? {}
 

@@ -26,7 +26,7 @@ without sacrificing previous two points.
 ## Notes
 1. Jakeloud wouldn't scan nginx configs as there may
 be some other apps and services running on the server.
-It will only remove configs you implicitly as him to
+It will only remove configs you implicitly ask him to
 remove (when deleting an app). So it may be a good
 idea to review your `/etc/nginx/conf.d` folder to
 clean up configs in case system failure to remove one.

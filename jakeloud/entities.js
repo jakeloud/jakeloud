@@ -48,6 +48,8 @@ class App {
     this.email = email
     this.vcs = vcs
     this.port = port
+    // TODO: add ssh port, additional.onpremise
+    // TODO: add additional.env
     this.additional = additional
   }
   async clone() {
