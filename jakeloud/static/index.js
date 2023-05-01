@@ -10,11 +10,18 @@ const getLoginData = () => {
   return { password, email }
 }
 const api = async (op, obj = {}) =>
-  await fetch('https://jakeloud.yam.pw/api', {
+  await fetch('/api', {
     mode: 'no-cors',
     method: 'POST',
     body: JSON.stringify({op, ...getLoginData(), ...obj}),
   })
+
+const Button = (text, onClick) => {
+  const button = document.createElement('button')
+  button.innerText = text
+  button.onclick = onClick
+  return button
+}
 
 const Field = (name) => {
   const input = document.createElement('input')
@@ -29,11 +36,8 @@ const Field = (name) => {
 
 const Form = (onSubmit, submitText, ...fields) => {
   const form = document.createElement('form')
-  const submit = document.createElement('button')
-  submit.innerText = submitText
   form.onsubmit = onSubmit
-  form.append(...fields)
-  form.append(submit)
+  form.append(...fields, Button(submitText, onSubmit))
   return form
 }
 
@@ -94,48 +98,48 @@ const handleRegisterAllowed = (registerAllowed) => {
 
 const App = (app) => {
   // TODO: add on-premise dev server
-  const el = document.createElement('pre')
   const additional = app.additional ?? {}
-  const strippedApp = { name: app.name, domain: app.domain, vcs: app.vcs, repo: app.repo }
 
-  let additionalHTML = ''
-  if (app.name === 'jakeloud') {
-    const updateJakeloudButton = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
-    const registrationCheckbox = `<label for="a">Registration allowed
-  <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick="handleRegisterAllowed(event.target.checked)"/>
-</label>`
-    additionalHTML = `${updateJakeloudButton}${registrationCheckbox}`
-  } else {
-    const rebootApp = `<button onclick='api("create-app", ${JSON.stringify(strippedApp)})'>full reboot</button>`
-    const deleteApp = `<button onclick='api("delete-app", ${JSON.stringify(strippedApp)})'>delete</button>`
-    additionalHTML = `${rebootApp}${deleteApp}`
-  }
-  el.innerHTML =
-`<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
+  const wrapper = document.createElement('div')
+  const info = document.createElement('pre')
+  info.innerHTML = `
+<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
 repo: ${app.repo}
 owner: ${app.email}
-<big>status: ${app.state}</big>
-${additionalHTML}
-`
-  return el
+<big>status: ${app.state}</big>`
+  wrapper.append(document.createElement('hr'), info)
+
+  if (app.name === 'jakeloud') {
+    const registrationCheckbox = document.createElement('div')
+    registrationCheckbox.innerHTML = `
+      <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick="handleRegisterAllowed(event.target.checked)"/>
+      <label for="a">
+      Registration allowed
+      </label>`
+
+    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox)
+  } else {
+    wrapper.append(
+      Button('full reboot', () => api('create-app', app)),
+      Button('delete app', () => api('delete-app', app)),
+    )
+  }
+  return wrapper
 }
 
 const AppsTab = () => {
-  const addApp = document.createElement('button')
-  addApp.innerText = 'add app'
-  addApp.onclick=add
-
-  const logout = document.createElement('button')
-  logout.innerText = 'logout'
-  logout.onclick = setLoginData.bind(null, [null, null])
-
   const downloadConf = document.createElement('a')
   downloadConf.download = 'conf.json'
   downloadConf.innerText = 'Download conf.json'
   downloadConf.href = createFileUrl(JSON.stringify(conf))
 
   root.innerHTML = ''
-  root.append(addApp, logout, downloadConf, ...conf.apps.map(App))
+  root.append(
+    Button('add app', add),
+    Button('logout', setLoginData.bind(null, [null, null])),
+    downloadConf,
+    ...conf.apps.map(App)
+  )
 }
 
 const confHandler = {
