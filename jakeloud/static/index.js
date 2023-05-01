@@ -37,26 +37,20 @@ const Form = (onSubmit, submitText, ...fields) => {
   return form
 }
 
+const formDataToJSON = (formData) => formData.reduce((object, value, key) => object[key] = value, {})
+
 const handleJakeloudDomain = (e) => {
   e.preventDefault()
   const data = new FormData(e.target)
-  const body = {
-    email: data.get('email'),
-    domain: data.get('domain'),
-  }
-  api('set-jakeloud-domain', body)
+  api('set-jakeloud-domain', formDataToJSON(data))
   window.replace(`https://${domain}`)
 }
 const handleRegister = async (e) => {
   e.preventDefault()
   const data = new FormData(e.target)
   setLoginData(data.get('password'), data.get('email'))
-  const body = {
-    email: data.get('email'),
-    password: data.get('password'),
-  }
   root.innerHTML = 'Registering...'
-  await api('register', body)
+  await api('register', formDataToJSON(data))
   getConf()
 }
 const handleLogin = (e) => {
@@ -67,14 +61,8 @@ const handleLogin = (e) => {
 }
 const handleCreateApp = async (e) => {
   const data = new FormData(e.target)
-  const body = {
-    domain: data.get('domain'),
-    name: data.get('name'),
-    repo: data.get('repo'),
-    vcs: data.get('vcs'),
-  }
   root.innerHTML = 'Creating app. Refresh to track progress in real time'
-  await api('create-app', body)
+  await api('create-app', formDataToJSON(data))
   getConf()
   e.preventDefault()
 }
@@ -101,27 +89,28 @@ const handleRegisterAllowed = (registerAllowed) => {
 }
 
 const App = (app) => {
-  // TODO: refactor and add on-premise dev server
+  // TODO: add on-premise dev server
   const el = document.createElement('pre')
   const additional = app.additional ?? {}
 
-  let buttonHTML = ''
-  let secondButton = ''
+  let additionalHTML = ''
   if (app.name === 'jakeloud') {
-    buttonHTML = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
-    secondButton = `<label for="a">Registration allowed
+    const updateJakeloudButton = `<button onclick="handleUpdateJakeloud()">update jakeloud</button>`
+    const registrationCheckbox = `<label for="a">Registration allowed
   <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick="handleRegisterAllowed(event.target.checked)"/>
 </label>`
+    additionalHTML = `${updateJakeloudButton}${registrationCheckbox}`
   } else {
-    buttonHTML = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
-    secondButton = `<button onclick='api("delete-app", ${JSON.stringify(app)})'>delete</button>`
+    const rebootApp = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
+    const deleteApp = `<button onclick='api("delete-app", ${JSON.stringify(app)})'>delete</button>`
+    additionalHTML = `${rebootApp}${deleteApp}`
   }
   el.innerHTML =
 `<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>
-${buttonHTML} ${secondButton}
+${additionalHTML}
 `
   return el
 }

@@ -2,7 +2,7 @@ const {
   App, getApp, setApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated, updateJakeloud,
 } = require('./entities.js')
 
-const fullReloadApp = async (name, email) => {
+const fullReloadApp = async (name) => {
   let app
   app = await getApp(name)
   app.state = 'cloning'
@@ -39,7 +39,7 @@ const fullReloadApp = async (name, email) => {
   await setApp(name, app)
 }
 
-const deleteApp = async (req, res, body) => {
+const deleteAppOp = async (req, res, body) => {
   const { name, email } = body
   const app = await getApp(name)
   if (!await isAuthenticated(body) || !name || !app || !app.email === email) return
@@ -119,38 +119,30 @@ const createAppOp = async (req, res, body) => {
   while (takenPorts.includes(port)) port++
   const newApp = new App({ email, domain, repo, name, port, vcs })
   await setApp(name, newApp)
-  fullReloadApp(name, body.email)
+  fullReloadApp(name)
 }
 
-const deleteAppOp = async (req, res, body) => {
+const updateJakeloudOp = async (req, res, body) => {
+  if (!await isAuthenticated(body)) return
+  updateJakeloud()
+}
+
+const ops = {
+  'set-jakeloud-domain': setJakeloudDomainOp,
+  'set-jakeloud-additional': setJakeloudAdditionalOp,
+  'register': registerOp,
+  'get-conf': getConfOp,
+  'create-app': createAppOp,
+  'delete-app': deleteAppOp,
+  'update-jakeloud': updateJakeloudOp,
 }
 
 const api = async (req, res, body) => {
-  switch (body.op) {
-    case 'set-jakeloud-domain':
-      await setJakeloudDomainOp(req, res, body)
-      break
-    case 'set-jakeloud-additional':
-      await setJakeloudAdditionalOp(req, res, body)
-      break
-    case 'register':
-      await registerOp(req, res, body)
-      break
-    case 'get-conf':
-      await getConfOp(req, res, body)
-      break
-    case 'create-app':
-      await createAppOp(req, res, body)
-      break
-    case 'delete-app':
-      deleteApp(req, res, body)
-      break
-    case 'update-jakeloud':
-      if (!await isAuthenticated(body)) return
-      updateJakeloud()
-      break
-    default:
-      res.write('{"message":"noop"}')
+  const op = ops[body.op]
+  if (!op) {
+    res.write('{"message":"noop"}')
+  } else {
+    await op(req, res, body)
   }
 }
 
