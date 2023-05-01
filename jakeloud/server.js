@@ -56,7 +56,10 @@ getApp(JAKELOUD).then(jakeloudApp =>
     await jakeloudApp.save()
     await jakeloudApp.proxy()
     if (jakeloudApp.domain) {
-      await jakeloudApp.cert()
+      let app = await getApp(JAKELOUD)
+      app.state = 'starting'
+      await app.save()
+      await app.cert()
     }
   })
 )
