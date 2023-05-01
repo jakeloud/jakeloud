@@ -24,14 +24,15 @@ const Button = (text, onClick) => {
 }
 
 const Field = (name) => {
+  const field = document.createElement('div')
   const input = document.createElement('input')
   const label = document.createElement('label')
   input.id = name
   input.name = name
   label.for = name
   label.innerText = name
-  label.append(input)
-  return label
+  field.append(label, input)
+  return field
 }
 
 const Form = (onSubmit, submitText, ...fields) => {
@@ -78,11 +79,11 @@ const handleCreateApp = async (e) => {
 handleUpdateJakeloud = async () => await api('update-jakeloud')
 
 add = () => {
-  const pre = document.createElement('pre')
-  pre.innerText = `Enter git vcs root in a format "<user>:<token>@<host>".
+  const p = document.createElement('p')
+  p.innerText = `Enter git vcs root in a format "<user>:<token>@<host>".
 Enter github repo in a format "<user>/<repo>".`
   root.innerHTML = ''
-  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('vcs'), Field('repo'), pre))
+  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('vcs'), Field('repo'), p))
 }
 
 // https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
