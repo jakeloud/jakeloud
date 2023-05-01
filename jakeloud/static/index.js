@@ -37,7 +37,11 @@ const Form = (onSubmit, submitText, ...fields) => {
   return form
 }
 
-const formDataToJSON = (formData) => formData.reduce((object, value, key) => object[key] = value, {})
+const formDataToJSON = (formData) => {
+  const object = {}
+  formData.forEach((value, key) => object[key] = value)
+  return object
+}
 
 const handleJakeloudDomain = (e) => {
   e.preventDefault()
@@ -92,6 +96,7 @@ const App = (app) => {
   // TODO: add on-premise dev server
   const el = document.createElement('pre')
   const additional = app.additional ?? {}
+  const strippedApp = { name: app.name, domain: app.domain, vcs: app.vcs, repo: app.repo }
 
   let additionalHTML = ''
   if (app.name === 'jakeloud') {
@@ -101,8 +106,8 @@ const App = (app) => {
 </label>`
     additionalHTML = `${updateJakeloudButton}${registrationCheckbox}`
   } else {
-    const rebootApp = `<button onclick='api("create-app", ${JSON.stringify(app)})'>full reboot</button>`
-    const deleteApp = `<button onclick='api("delete-app", ${JSON.stringify(app)})'>delete</button>`
+    const rebootApp = `<button onclick='api("create-app", ${JSON.stringify(strippedApp)})'>full reboot</button>`
+    const deleteApp = `<button onclick='api("delete-app", ${JSON.stringify(strippedApp)})'>delete</button>`
     additionalHTML = `${rebootApp}${deleteApp}`
   }
   el.innerHTML =

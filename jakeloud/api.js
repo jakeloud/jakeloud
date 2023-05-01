@@ -1,43 +1,6 @@
 const {
-  App, getApp, setApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated, updateJakeloud,
+  App, getApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated, updateJakeloud,
 } = require('./entities.js')
-
-const fullReloadApp = async (name) => {
-  let app
-  app = await getApp(name)
-  app.state = 'cloning'
-  await setApp(name, app)
-  await app.clone()
-  if ((await getApp(name)).state != 'cloning') return
-  app = await getApp(name)
-  app.state = 'building'
-  await setApp(name, app)
-  await app.build()
-  if ((await getApp(name)).state != 'building') return
-
-  app = await getApp(name)
-  app.state = 'starting'
-  await setApp(name, app)
-  // here we stop&remove previously running instance
-  await app.start()
-  if ((await getApp(name)).state != 'starting') return
-
-  app = await getApp(name)
-  app.state = 'proxying'
-  await setApp(name, app)
-  await app.proxy()
-  if ((await getApp(name)).state != 'proxying') return
-
-  app = await getApp(name)
-  app.state = 'certing'
-  await setApp(name, app)
-  await app.cert()
-  if ((await getApp(name)).state != 'certing') return
-
-  app = await getApp(name)
-  app.state = 'running'
-  await setApp(name, app)
-}
 
 const deleteAppOp = async (req, res, body) => {
   const { name, email } = body
@@ -45,13 +8,13 @@ const deleteAppOp = async (req, res, body) => {
   if (!await isAuthenticated(body) || !name || !app || !app.email === email) return
   await app.stop()
 
-  const conf = await getConf({email})
+  let conf = await getConf({email})
   const isRepoUsedElsewhere = conf.apps.filter(a => a.repo === app.repo).length > 1
   await app.remove(!isRepoUsedElsewhere)
 
-  const syncConf = await getConf({email})
-  syncConf.apps = syncConf.apps.filter(a => a.name !== name)
-  await setConf(syncConf)
+  conf = await getConf({email})
+  conf.apps = conf.apps.filter(a => a.name !== name)
+  await setConf(conf)
 }
 
 const setJakeloudDomainOp = async (req, res, body) => {
@@ -59,20 +22,16 @@ const setJakeloudDomainOp = async (req, res, body) => {
   const conf = await getConf({email})
   if (!email || !domain || (conf.users.length && !await isAuthenticated(body))) return
 
-  const jakeloudApp = await getApp(JAKELOUD)
+  let jakeloudApp = await getApp(JAKELOUD)
   jakeloudApp.domain = domain
   jakeloudApp.email = email
   jakeloudApp.state = 'setting up domain'
-  await setApp(JAKELOUD, jakeloudApp)
-
-  jakeloudApp.proxy().then(async () => {
-    const jakeloudApp = await getApp(JAKELOUD)
-    if (jakeloudApp.domain === domain) {
-      await jakeloudApp.cert()
-      jakeloudApp.state = 'running'
-      await setApp(JAKELOUD, jakeloudApp)
-    }
-  })
+  await jakeloudApp.save()
+  await jakeloudApp.proxy()
+  jakeloudApp = await getApp(JAKELOUD)
+  if (jakeloudApp.domain === domain) {
+    await jakeloudApp.cert()
+  }
 }
 
 setJakeloudAdditionalOp = async (req, res, body) => {
@@ -117,9 +76,14 @@ const createAppOp = async (req, res, body) => {
   const takenPorts = conf.apps.map(app => app.port)
   let port = 38000
   while (takenPorts.includes(port)) port++
-  const newApp = new App({ email, domain, repo, name, port, vcs })
-  await setApp(name, newApp)
-  fullReloadApp(name)
+  const app = new App({ email, domain, repo, name, port, vcs })
+  await app.save()
+  // run pipeline
+  await app.clone()
+  await app.build()
+  await app.proxy()
+  await app.start()
+  await app.cert()
 }
 
 const updateJakeloudOp = async (req, res, body) => {
