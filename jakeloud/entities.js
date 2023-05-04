@@ -41,7 +41,7 @@ const getConf = async ({email, sudo} = {}) => {
 }
 
 class App {
-  constructor({name, domain, repo, port, state, email, vcs, additional}) {
+  constructor({name, domain, repo, port, sshPort, state, email, vcs, additional}) {
     this.name = name
     this.domain = domain
     this.repo = repo
@@ -49,9 +49,8 @@ class App {
     this.email = email
     this.vcs = vcs
     this.port = port
-    // TODO: add ssh port, additional.onpremise
-    // TODO: add additional.env
-    this.additional = additional
+    this.sshPort = sshPort
+    this.additional = additional || {}
   }
   async save() {
     const conf = await getConf({sudo: true})
@@ -77,6 +76,12 @@ class App {
     try {
       await execWrapped(`rm -rf /etc/jakeloud/${this.repo}`)
       await execWrapped(`git clone https://${this.vcs}/${this.repo}.git /etc/jakeloud/${this.repo}`)
+
+      const devDockerfileExists = existsSync(`/etc/jakeloud/${this.repo}/dev.Dockerfile`)
+      if (devDockerfileExists) {
+        this.additional.supportsOnPremise = true
+        await this.save()
+      }
     } catch(e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -89,7 +94,11 @@ class App {
     this.state = 'building'
     await this.save()
     try {
-      await execWrapped(`docker build -t ${this.repo.toLowerCase()} /etc/jakeloud/${this.repo}`)
+      if (this.additional.isOnPremise) {
+        await execWrapped(`docker build -t ${this.repo.toLowerCase()} -f /etc/jakeloud/${this.repo}/dev.Dockerfile /etc/jakeloud/${this.repo}`)
+      } else {
+        await execWrapped(`docker build -t ${this.repo.toLowerCase()} /etc/jakeloud/${this.repo}`)
+      }
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -118,6 +127,8 @@ class App {
           if (!existsSync(`/etc/nginx/sites-enabled/${file}`))
             linkSync(`/etc/nginx/sites-available/${file}`, `/etc/nginx/sites-enabled/${file}`)
       
+          // test nginx config for syntax errors
+          await execWrapped(`sudo nginx -t`)
           await execWrapped(`sudo systemctl restart nginx`)
     } catch (e) {
       this.state = `Error: ${e}`
@@ -132,7 +143,13 @@ class App {
     await this.save()
     try {
       await execWrapped(`if [ -z "$(sudo docker ps -q -f name=${this.name})" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
-      await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${this.repo.toLowerCase()}`)
+      const dockerOptions = this.additional.dockerOptions || ''
+
+      if (this.sshPort) {
+        await execWrapped(`docker run --name ${this.name} -d -p ${this.sshPort}:22 -p ${this.port}:80 ${dockerOptions} ${this.repo.toLowerCase()}`)
+      } else {
+        await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${dockerOptions} ${this.repo.toLowerCase()}`)
+      }
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()

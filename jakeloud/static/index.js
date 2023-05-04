@@ -87,11 +87,17 @@ const handleCreateApp = async (e) => {
   e.preventDefault()
 }
 
+const handleCreateOnPremise = (prefilledData) => async (e) => {
+  const data = new FormData(e.target)
+  root.innerHTML = 'Creating on premise. Refresh to track progress in real time'
+  await api('create-on-premise', {...prefilledData, ...formDataToJSON(data)})
+  getConf()
+  e.preventDefault()
+}
+
 handleUpdateJakeloud = async () => await api('update-jakeloud')
 
-add = () => {
-  const p = document.createElement('p')
-  p.innerText = `Enter github repo in a format "<user|org>/<repo>".`
+add = (options = {}) => {
   const vcses = getVCSData()
   const vcsField = document.createElement('div')
   const vcsSelect = document.createElement('select')
@@ -111,7 +117,16 @@ add = () => {
   vcsField.append(label, vcsSelect)
 
   root.innerHTML = ''
-  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), vcsField, Field('repo'), p))
+  if (options.onPremise) {
+    const p = document.createElement('p')
+    p.innerText = `Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
+    const { vcs, repo } = options
+    root.append(Form(handleCreateOnPremise({vcs, repo}), 'create on premise', Field('name'), Field('domain'), Field('docker options'), p))
+  } else {
+    const p = document.createElement('p')
+    p.innerText = `Enter github repo in a format "<user|org>/<repo>". Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
+    root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), vcsField, Field('repo'), Field('docker options'), p))
+  }
 }
 
 // https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
@@ -126,7 +141,6 @@ const handleRegisterAllowed = (registerAllowed) => {
 }
 
 const App = (app) => {
-  // TODO: add on-premise dev server
   const additional = app.additional ?? {}
   const vcses = getVCSData()
   const vcs = vcses.find(vcs => app.vcs === `${vcs.user}@${vcs.host}` || app.vcs === vcs.host)
@@ -135,7 +149,7 @@ const App = (app) => {
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
   info.innerHTML = `
-<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
+<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>`
@@ -161,6 +175,9 @@ owner: ${app.email}
       wrapper.append(
         Button('delete app', () => api('delete-app', app)),
       )
+      if (additional.supportsOnPremise) {
+        wrapper.append(Button('on-premise dev server', () => add({onPremise: true, vcs: app.vcs, repo: app.repo})))
+      }
     }
   }
   return wrapper
