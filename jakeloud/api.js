@@ -66,6 +66,12 @@ const getConfOp = async (req, res, body) => {
     res.write(JSON.stringify({message: 'login'}))
     return
   }
+  // don't leak token
+  conf.apps = conf.apps.map(app => {
+    if (!app.vcs) return app
+    app.vcs = app.vcs.replace(/:[^@]+/g, '') // user:token@host -> user@host
+    return app
+  })
   res.write(JSON.stringify(conf))
 }
 

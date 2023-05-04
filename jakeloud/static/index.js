@@ -9,6 +9,17 @@ const getLoginData = () => {
   email = window.localStorage.getItem('email')
   return { password, email }
 }
+
+const setVCSData = (vcs) => window.localStorage.setItem('vcs', JSON.stringify(vcs))
+
+const getVCSData = () => {
+  try {
+    return JSON.parse(window.localStorage.getItem('vcs')) || []
+  } catch (e) {
+    return []
+  }
+}
+
 const api = async (op, obj = {}) =>
   await fetch('/api', {
     mode: 'no-cors',
@@ -80,10 +91,27 @@ handleUpdateJakeloud = async () => await api('update-jakeloud')
 
 add = () => {
   const p = document.createElement('p')
-  p.innerText = `Enter git vcs root in a format "<user>:<token>@<host>".
-Enter github repo in a format "<user>/<repo>".`
+  p.innerText = `Enter github repo in a format "<user|org>/<repo>".`
+  const vcses = getVCSData()
+  const vcsField = document.createElement('div')
+  const vcsSelect = document.createElement('select')
+  const label = document.createElement('label')
+  vcsSelect.id = 'vcs'
+  vcsSelect.name = 'vcs'
+  vcsSelect.append(
+    ...vcses.map(vcs => {
+      const option = document.createElement('option')
+      option.value = `${vcs.user}:${vcs.token}@${vcs.host}`
+      option.innerText = `${vcs.user}@${vcs.host}`
+      return option
+    })
+  )
+  label.for = 'vcs'
+  label.innerText = 'vcs'
+  vcsField.append(label, vcsSelect)
+
   root.innerHTML = ''
-  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('vcs'), Field('repo'), p))
+  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), vcsField, Field('repo'), p))
 }
 
 // https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
@@ -100,6 +128,9 @@ const handleRegisterAllowed = (registerAllowed) => {
 const App = (app) => {
   // TODO: add on-premise dev server
   const additional = app.additional ?? {}
+  const vcses = getVCSData()
+  const vcs = vcses.find(vcs => app.vcs === `${vcs.user}@${vcs.host}` || app.vcs === vcs.host)
+  app.vcs = vcs ? `${vcs.user}:${vcs.token}@${vcs.host}` : null
 
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
@@ -117,28 +148,63 @@ owner: ${app.email}
       <label for="a">
       Registration allowed
       </label>`
+    
+    const downloadConf = document.createElement('a')
+    downloadConf.download = 'conf.json'
+    downloadConf.innerText = 'Download conf.json'
+    downloadConf.href = createFileUrl(JSON.stringify(conf))
 
-    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox)
+    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, downloadConf)
   } else {
-    wrapper.append(
-      Button('full reboot', () => api('create-app', app)),
-      Button('delete app', () => api('delete-app', app)),
-    )
+    if (app.vcs) {
+      wrapper.append(Button('full reboot', () => api('create-app', app)))
+      wrapper.append(
+        Button('delete app', () => api('delete-app', app)),
+      )
+    }
   }
   return wrapper
 }
 
-const AppsTab = () => {
-  const downloadConf = document.createElement('a')
-  downloadConf.download = 'conf.json'
-  downloadConf.innerText = 'Download conf.json'
-  downloadConf.href = createFileUrl(JSON.stringify(conf))
+const VCSTab = () => {
+  const vcses = getVCSData()
+  root.innerHTML = ''
+  root.append(
+    Form(
+      (e) => {
+        const data = new FormData(e.target)
+        e.preventDefault()
+        setVCSData(vcses.concat([formDataToJSON(data)]))
+        VCSTab()
+      },
+      'add vcs',
+      Field('user'),
+      Field('token'),
+      Field('host')
+    ),
+    ...vcses.map((vcs, j) => {
+      const wrapper = document.createElement('div')
+      const info = document.createElement('pre')
+      info.innerHTML = `${vcs.user}@${vcs.host}`
+      wrapper.append(
+        document.createElement('hr'),
+        info,
+        Button('delete vcs', () => {
+          setVCSData(vcses.filter((_, i) => i !== j))
+          VCSTab()
+        }),
+      )
+      return wrapper
+    })
+  )
+}
 
+const AppsTab = () => {
   root.innerHTML = ''
   root.append(
     Button('add app', add),
+    Button('manage VCS', VCSTab),
     Button('logout', setLoginData.bind(null, [null, null])),
-    downloadConf,
     ...conf.apps.map(App)
   )
 }
