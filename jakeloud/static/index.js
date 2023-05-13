@@ -49,7 +49,7 @@ const Field = (name) => {
 const Form = (onSubmit, submitText, ...fields) => {
   const form = document.createElement('form')
   form.onsubmit = onSubmit
-  form.append(...fields, Button(submitText, onSubmit))
+  form.append(...fields, Button(submitText))
   return form
 }
 
@@ -60,14 +60,14 @@ const formDataToJSON = (formData) => {
 }
 
 const handleJakeloudDomain = (e) => {
-  e.preventDefault()
   const data = new FormData(e.target)
+  e.preventDefault()
   api('set-jakeloud-domain', formDataToJSON(data))
-  window.replace(`https://${domain}`)
+  location.replace(`https://${data.get('domain')}`)
 }
 const handleRegister = async (e) => {
-  e.preventDefault()
   const data = new FormData(e.target)
+  e.preventDefault()
   setLoginData(data.get('password'), data.get('email'))
   root.innerHTML = 'Registering...'
   await api('register', formDataToJSON(data))
@@ -75,24 +75,24 @@ const handleRegister = async (e) => {
 }
 const handleLogin = (e) => {
   const data = new FormData(e.target)
+  e.preventDefault()
   setLoginData(data.get('password'), data.get('email'))
   getConf()
-  e.preventDefault()
 }
 const handleCreateApp = async (e) => {
   const data = new FormData(e.target)
+  e.preventDefault()
   root.innerHTML = 'Creating app. Refresh to track progress in real time'
   await api('create-app', formDataToJSON(data))
   getConf()
-  e.preventDefault()
 }
 
 const handleCreateOnPremise = (prefilledData) => async (e) => {
   const data = new FormData(e.target)
+  e.preventDefault()
   root.innerHTML = 'Creating on premise. Refresh to track progress in real time'
   await api('create-on-premise', {...prefilledData, ...formDataToJSON(data)})
   getConf()
-  e.preventDefault()
 }
 
 handleUpdateJakeloud = async () => await api('update-jakeloud')
@@ -240,7 +240,7 @@ const confHandler = {
   },
   register: () => {
     root.innerHTML = ''
-    root.append(Form(handleRegister, 'register', Field('email'), Field('password'), submit))
+    root.append(Form(handleRegister, 'register', Field('email'), Field('password')))
   }
 }
 

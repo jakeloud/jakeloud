@@ -10,11 +10,13 @@ const setJakeloudDomainOp = async (req, res, body) => {
   let jakeloudApp = await getApp(JAKELOUD)
   jakeloudApp.domain = domain
   jakeloudApp.email = email
-  jakeloudApp.state = 'setting up domain'
+  jakeloudApp.state = 'building'
   await jakeloudApp.save()
   await jakeloudApp.proxy()
   jakeloudApp = await getApp(JAKELOUD)
   if (jakeloudApp.domain === domain) {
+    jakeloudApp.state = 'starting'
+    await jakeloudApp.save()
     await jakeloudApp.cert()
   }
 }

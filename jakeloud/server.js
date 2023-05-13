@@ -53,6 +53,7 @@ const server = http.createServer(async (req, res) => {
 getApp(JAKELOUD).then(jakeloudApp =>
   server.listen(jakeloudApp.port, async () => {
     jakeloudApp.port = server.address().port
+    jakeloudApp.state = 'building'
     await jakeloudApp.save()
     await jakeloudApp.proxy()
     if (jakeloudApp.domain) {

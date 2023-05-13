@@ -220,7 +220,7 @@ const isAuthenticated = async (body) => {
 }
 
 const setUser = async (email, password) => {
-  const conf = await getConf()
+  const conf = await getConf({sudo: true})
   const salt = crypto.randomBytes(128).toString('base64')
   const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512')
   conf.users.push({email, hash, salt})
