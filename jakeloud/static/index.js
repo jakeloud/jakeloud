@@ -149,7 +149,7 @@ const App = (app) => {
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
   info.innerHTML = `
-<b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
+<a href="#${app.name}">📌</a><b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>`
@@ -225,10 +225,15 @@ const SettingsTab = () => {
 
 const AppsTab = () => {
   root.innerHTML = ''
+  const apps = conf.apps.filter(app => {
+    const hash = window.location.hash
+    const isDetailedInfo = hash !== '' ? hash === app.name : true
+    return app.name !== 'jakeloud' && isDetailedInfo
+  }).map(App)
   root.append(
     Header(),
     Button('add app', add),
-    ...conf.apps.filter(app => app.name !== 'jakeloud').map(App)
+    ...apps,
   )
 }
 
