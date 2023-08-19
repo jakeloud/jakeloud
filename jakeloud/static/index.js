@@ -144,7 +144,7 @@ const App = (app) => {
   const additional = app.additional ?? {}
   const vcses = getVCSData()
   const vcs = vcses.find(vcs => app.vcs === `${vcs.user}@${vcs.host}` || app.vcs === vcs.host)
-  app.vcs = vcs ? `${vcs.user}:${vcs.token}@${vcs.host}` : null
+  const displayVcs = vcs ? `${vcs.user}:${vcs.token}@${vcs.host}` : null
 
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
@@ -170,13 +170,13 @@ owner: ${app.email}
 
     wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, downloadConf)
   } else {
-    if (app.vcs) {
-      wrapper.append(Button('full reboot', () => api('createAppOp', app)))
+    if (displayVcs) {
+      wrapper.append(Button('full reboot', () => api('createAppOp', {...app, vcs: displayVcs})))
       wrapper.append(
-        Button('delete app', () => api('deleteAppOp', app)),
+        Button('delete app', () => api('deleteAppOp', {...app, vcs: displayVcs})),
       )
       if (additional.supportsOnPremise) {
-        wrapper.append(Button('on-premise dev server', () => add({onPremise: true, vcs: app.vcs, repo: app.repo})))
+        wrapper.append(Button('on-premise dev server', () => add({onPremise: true, vcs: displayVcs, repo: app.repo})))
       }
     }
   }
