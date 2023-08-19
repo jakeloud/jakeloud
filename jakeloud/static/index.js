@@ -188,8 +188,9 @@ let Header
 const SettingsTab = () => {
   const jakeloudApp = conf.apps.find(app => app.name === 'jakeloud')
   const vcses = getVCSData()
-  const wrapper = document.createElement('div')
-  wrapper.append(
+  
+  root.innerHTML = ''
+  root.append(
     Header(),
     Button('logout', setLoginData.bind(null, [null, null])),
     App(jakeloudApp), 
@@ -220,7 +221,6 @@ const SettingsTab = () => {
       return wrapper
     })
   )
-  return wrapper
 }
 
 const AppsTab = () => {
