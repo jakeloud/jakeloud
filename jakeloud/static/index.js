@@ -149,7 +149,7 @@ const App = (app) => {
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
   info.innerHTML = `
-<a href="#${app.name}">📌</a><b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
+<a href="#${app.name}">&nwarr;</a><b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>`
