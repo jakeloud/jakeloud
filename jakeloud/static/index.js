@@ -227,7 +227,7 @@ const AppsTab = () => {
   root.innerHTML = ''
   const apps = conf.apps.filter(app => {
     const hash = window.location.hash
-    const isDetailedInfo = hash !== '' ? hash === app.name : true
+    const isDetailedInfo = hash !== '' ? hash === `#${app.name}` : true
     return app.name !== 'jakeloud' && isDetailedInfo
   }).map(App)
   root.append(
