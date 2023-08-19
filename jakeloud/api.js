@@ -4,7 +4,7 @@ const {
 
 const setJakeloudDomainOp = async (req, res, body) => {
   const { email, domain } = body
-  const conf = await getConf({email})
+  const conf = await getConf()
   if (!email || !domain || (conf.users.length && !await isAuthenticated(body))) return
 
   let jakeloudApp = await getApp(JAKELOUD)
@@ -23,9 +23,10 @@ const setJakeloudDomainOp = async (req, res, body) => {
 
 setJakeloudAdditionalOp = async (req, res, body) => {
   const { additional, email } = body
-  const conf = await getConf({email})
+  const conf = await getConf()
   if (!additional || !await isAuthenticated(body)) return
   const jakeloudAppIndex = conf.apps.findIndex(a => a.name === JAKELOUD)
+  if (email !== conf.apps[jakeloudAppIndex].owner) return
   conf.apps[jakeloudAppIndex].additional = additional
   await setConf(conf)
 }
@@ -39,7 +40,7 @@ const registerOp = async (req, res, body) => {
 }
 
 const getConfOp = async (req, res, body) => {
-  const conf = await getConf({email: body.email})
+  const conf = await getConf()
   if (!conf.users.length) {
     const jakeloudApp = await getApp(JAKELOUD)
     if (!jakeloudApp.domain) {
@@ -67,7 +68,7 @@ const createAppOp = async (req, res, body) => {
   const dockerOptions = body['docker options']
   const additional = {dockerOptions}
   if (!await isAuthenticated(body) || !domain || !repo || !name || !email || !vcs) return
-  const conf = await getConf({sudo: true})
+  const conf = await getConf()
   const takenPorts = conf.apps.map(app => app.port)
   const takenSshPorts = conf.apps.map(app => app.sshPort)
   let port = 38000
@@ -87,7 +88,7 @@ const createOnPremiseOp = async (req, res, body) => {
   const dockerOptions = body['docker options']
   const additional = {dockerOptions, isOnPremise: true}
   if (!await isAuthenticated(body) || !domain || !repo || !name || !email || !vcs) return
-  const conf = await getConf({sudo: true})
+  const conf = await getConf()
   const takenPorts = conf.apps.map(app => app.port)
   const takenSshPorts = conf.apps.map(app => app.sshPort)
   let port = 38000
@@ -110,11 +111,11 @@ const deleteAppOp = async (req, res, body) => {
   if (!await isAuthenticated(body) || !name || !app || !app.email === email) return
   await app.stop()
 
-  let conf = await getConf({email})
+  let conf = await getConf()
   const isRepoUsedElsewhere = conf.apps.filter(a => a.repo === app.repo).length > 1
   await app.remove(!isRepoUsedElsewhere)
 
-  conf = await getConf({email})
+  conf = await getConf()
   conf.apps = conf.apps.filter(a => a.name !== name)
   await setConf(conf)
 }
@@ -125,14 +126,14 @@ const updateJakeloudOp = async (req, res, body) => {
 }
 
 const ops = {
-  'set-jakeloud-domain': setJakeloudDomainOp,
-  'set-jakeloud-additional': setJakeloudAdditionalOp,
-  'register': registerOp,
-  'get-conf': getConfOp,
-  'create-app': createAppOp,
-  'create-on-premise': createOnPremiseOp,
-  'delete-app': deleteAppOp,
-  'update-jakeloud': updateJakeloudOp,
+  setJakeloudDomainOp,
+  setJakeloudAdditionalOp,
+  registerOp,
+  getConfOp,
+  createAppOp,
+  createOnPremiseOp,
+  deleteAppOp,
+  updateJakeloudOp,
 }
 
 const api = async (req, res, body) => {

@@ -23,20 +23,18 @@ const updateJakeloud = async () => {
 
 const setConf = (json) => writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
 
-const getConf = async ({email, sudo} = {}) => {
+const getConf = async () => {
   let conf
   try {
     if (existsSync(CONF_FILE)) {
-      const contents = readFileSync(CONF_FILE, 'utf8')
-      conf = JSON.parse(contents)
+      conf = JSON.parse(readFileSync(CONF_FILE, 'utf8'))
     } else {
       conf = FALLBACK_CONF
     }
   } catch(e) {
     conf = FALLBACK_CONF
   }
-  const apps = conf.apps.map(app => new App(app)).filter(app => sudo || app.email === email)
-  conf.apps = apps
+  conf.apps = conf.apps.map(app => new App(app))
   return conf
 }
 
@@ -53,7 +51,7 @@ class App {
     this.additional = additional || {}
   }
   async save() {
-    const conf = await getConf({sudo: true})
+    const conf = await getConf()
     if (conf.apps.find(app => app.name === this.name)) {
       conf.apps = conf.apps.map(app => app.name === this.name ? this : app)
       await setConf(conf)
@@ -204,7 +202,7 @@ class App {
 }
 
 const getApp = async (name) => {
-  const { users, apps } = await getConf({sudo: true})
+  const { apps } = await getConf()
   return apps.find(app => app.name === name)
 }
 
@@ -220,7 +218,7 @@ const isAuthenticated = async (body) => {
 }
 
 const setUser = async (email, password) => {
-  const conf = await getConf({sudo: true})
+  const conf = await getConf()
   const salt = crypto.randomBytes(128).toString('base64')
   const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512')
   conf.users.push({email, hash, salt})

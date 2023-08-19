@@ -62,7 +62,7 @@ const formDataToJSON = (formData) => {
 const handleJakeloudDomain = (e) => {
   const data = new FormData(e.target)
   e.preventDefault()
-  api('set-jakeloud-domain', formDataToJSON(data))
+  api('setJakeloudDomainOp', formDataToJSON(data))
   location.replace(`https://${data.get('domain')}`)
 }
 const handleRegister = async (e) => {
@@ -70,7 +70,7 @@ const handleRegister = async (e) => {
   e.preventDefault()
   setLoginData(data.get('password'), data.get('email'))
   root.innerHTML = 'Registering...'
-  await api('register', formDataToJSON(data))
+  await api('registerOp', formDataToJSON(data))
   getConf()
 }
 const handleLogin = (e) => {
@@ -83,7 +83,7 @@ const handleCreateApp = async (e) => {
   const data = new FormData(e.target)
   e.preventDefault()
   root.innerHTML = 'Creating app. Refresh to track progress in real time'
-  await api('create-app', formDataToJSON(data))
+  await api('createAppOp', formDataToJSON(data))
   getConf()
 }
 
@@ -91,11 +91,11 @@ const handleCreateOnPremise = (prefilledData) => async (e) => {
   const data = new FormData(e.target)
   e.preventDefault()
   root.innerHTML = 'Creating on premise. Refresh to track progress in real time'
-  await api('create-on-premise', {...prefilledData, ...formDataToJSON(data)})
+  await api('createOnPremiseOp', {...prefilledData, ...formDataToJSON(data)})
   getConf()
 }
 
-handleUpdateJakeloud = async () => await api('update-jakeloud')
+handleUpdateJakeloud = async () => await api('updateJakeloudOp')
 
 add = (options = {}) => {
   const vcses = getVCSData()
@@ -137,7 +137,7 @@ const createFileUrl = (content) => {
 }
 
 const handleRegisterAllowed = (registerAllowed) => {
-  api('set-jakeloud-additional', {additional: {registerAllowed}})
+  api('setJakeloudAdditionalOp', {additional: {registerAllowed}})
 }
 
 const App = (app) => {
@@ -171,9 +171,9 @@ owner: ${app.email}
     wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, downloadConf)
   } else {
     if (app.vcs) {
-      wrapper.append(Button('full reboot', () => api('create-app', app)))
+      wrapper.append(Button('full reboot', () => api('createAppOp', app)))
       wrapper.append(
-        Button('delete app', () => api('delete-app', app)),
+        Button('delete app', () => api('deleteAppOp', app)),
       )
       if (additional.supportsOnPremise) {
         wrapper.append(Button('on-premise dev server', () => add({onPremise: true, vcs: app.vcs, repo: app.repo})))
@@ -183,10 +183,16 @@ owner: ${app.email}
   return wrapper
 }
 
-const VCSTab = () => {
+let Header
+
+const SettingsTab = () => {
+  const jakeloudApp = conf.apps.find(app => app.name === 'jakeloud')
   const vcses = getVCSData()
-  root.innerHTML = ''
-  root.append(
+  const wrapper = document.createElement('div')
+  wrapper.append(
+    Header(),
+    Button('logout', setLoginData.bind(null, [null, null])),
+    App(jakeloudApp), 
     Form(
       (e) => {
         const data = new FormData(e.target)
@@ -214,16 +220,26 @@ const VCSTab = () => {
       return wrapper
     })
   )
+  return wrapper
 }
 
 const AppsTab = () => {
   root.innerHTML = ''
   root.append(
+    Header(),
     Button('add app', add),
-    Button('manage VCS', VCSTab),
-    Button('logout', setLoginData.bind(null, [null, null])),
-    ...conf.apps.map(App)
+    ...conf.apps.filter(app => app.name !== 'jakeloud').map(App)
   )
+}
+
+Header = () => {
+  const nav = document.createElement('nav')
+  nav.append(
+    Button('apps', AppsTab),
+    Button('settings', SettingsTab),
+    document.createElement('hr'),
+  )
+  return nav
 }
 
 const confHandler = {
@@ -245,7 +261,7 @@ const confHandler = {
 }
 
 const getConf = async () => {
-  const res = await api('get-conf')
+  const res = await api('getConfOp')
   conf = await res.json()
   if (conf.message) {
     confHandler[conf.message]()
