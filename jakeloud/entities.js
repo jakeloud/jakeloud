@@ -18,7 +18,7 @@ const execWrapped = (cmd) =>
   })
 
 const updateJakeloud = async () => {
-  await execWrapped('sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/notTGY/jakeloud/main/install.sh)"')
+  await execWrapped('sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/jakeloud/jakeloud/main/install.sh)"')
 }
 
 const setConf = (json) => writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))

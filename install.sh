@@ -10,7 +10,7 @@ fi
 
 
 # clone repository and mount everything
-git clone https://github.com/nottgy/jakeloud.git /jakeloud
+git clone https://github.com/jakeloud/jakeloud.git /jakeloud
 
 # this line allows to use install.sh as update script
 rm -rf etc/jakeloud/jakeloud

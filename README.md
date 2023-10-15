@@ -4,7 +4,7 @@
 1. run this in terminal.
 ```
 ssh <login>@<ip>
-sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/notTGY/jakeloud/main/install.sh)"
+sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/jakeloud/jakeloud/main/install.sh)"
 ```
 2. Go to server ip in browser. Enter domain for jakeloud dashboard (ex. `jakeloud.example.com`) and root user email. At this point server is setuping ssl cert and becomes unresponsive, so wait ~5min.
 3. Go to your domain. Register root user with the same email.
