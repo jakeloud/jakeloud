@@ -20,13 +20,26 @@ const getVCSData = () => {
   }
 }
 
-const api = async (op, obj = {}) =>
+/**
+ * Sends a request to the API endpoint.
+ *
+ * @param {string} op - The operation to perform.
+ * @param {Object} body - The request body.
+ * @return {Promise<Response>}
+ */
+const api = async (op, body = {}) =>
   await fetch('/api', {
-    mode: 'no-cors',
     method: 'POST',
-    body: JSON.stringify({op, ...getLoginData(), ...obj}),
+    body: JSON.stringify({op, ...getLoginData(), ...body}),
   })
 
+/**
+ * Button component
+ * 
+ * @param {string} text
+ * @param {function} onClick
+ * @returns {HTMLButtonElement}
+ */
 const Button = (text, onClick) => {
   const button = document.createElement('button')
   button.innerText = text
@@ -34,11 +47,19 @@ const Button = (text, onClick) => {
   return button
 }
 
-const Field = (name) => {
+/**
+ * Creates a Field element with a label and an input.
+ *
+ * @param {string} name
+ * @param {string} [type='text']
+ * @returns {HTMLDivElement}
+ */
+const Field = (name, type='text') => {
   const field = document.createElement('div')
   const input = document.createElement('input')
   const label = document.createElement('label')
   input.id = name
+  input.type = type
   input.name = name
   label.for = name
   label.innerText = name
@@ -46,6 +67,14 @@ const Field = (name) => {
   return field
 }
 
+/**
+ * Creates a form element with the given onSubmit function, submitText, and fields.
+ *
+ * @param {function} onSubmit
+ * @param {string} submitText
+ * @param {...HTMLElement} fields
+ * @return {HTMLFormElement}
+ */
 const Form = (onSubmit, submitText, ...fields) => {
   const form = document.createElement('form')
   form.onsubmit = onSubmit
@@ -87,14 +116,6 @@ const handleCreateApp = async (e) => {
   getConf()
 }
 
-const handleCreateOnPremise = (prefilledData) => async (e) => {
-  const data = new FormData(e.target)
-  e.preventDefault()
-  root.innerHTML = 'Creating on premise. Refresh to track progress in real time'
-  await api('createOnPremiseOp', {...prefilledData, ...formDataToJSON(data)})
-  getConf()
-}
-
 handleUpdateJakeloud = async () => await api('updateJakeloudOp')
 
 add = (options = {}) => {
@@ -117,23 +138,9 @@ add = (options = {}) => {
   vcsField.append(label, vcsSelect)
 
   root.innerHTML = ''
-  if (options.onPremise) {
-    const p = document.createElement('p')
-    p.innerText = `Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
-    const { vcs, repo } = options
-    root.append(Form(handleCreateOnPremise({vcs, repo}), 'create on premise', Field('name'), Field('domain'), Field('docker options'), p))
-  } else {
-    const p = document.createElement('p')
-    p.innerText = `Enter github repo in a format "<user|org>/<repo>". Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
-    root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), vcsField, Field('repo'), Field('docker options'), p))
-  }
-}
-
-// https://www.therogerlab.com/sandbox/pages/how-to-create-and-download-a-file-in-javascript?s=0ea4985d74a189e8b7b547976e7192ae.7213739ce01001e16cc74602189bfa09
-const createFileUrl = (content) => {
-  const file = new File(["\ufeff"+content], '', {type: "text/plain:charset=UTF-8"});
-
-  return window.URL.createObjectURL(file);
+  const p = document.createElement('p')
+  p.innerText = `Enter github repo in a format "<user|org>/<repo>". Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
+  root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), vcsField, Field('repo'), Field('docker options'), p))
 }
 
 const handleRegisterAllowed = (registerAllowed) => {
@@ -149,7 +156,7 @@ const App = (app) => {
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
   info.innerHTML = `
-<a href="#${app.name}">&nwarr;</a><b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>${app.sshPort ? ` ssh port:${app.sshPort}` : ''}
+<a href="#${app.name}">&nwarr;</a><b>${app.name}</b> - <a href="https://${app.domain}">${app.domain}</a>
 repo: ${app.repo}
 owner: ${app.email}
 <big>status: ${app.state}</big>`
@@ -162,22 +169,14 @@ owner: ${app.email}
       <label for="a">
       Registration allowed
       </label>`
-    
-    const downloadConf = document.createElement('a')
-    downloadConf.download = 'conf.json'
-    downloadConf.innerText = 'Download conf.json'
-    downloadConf.href = createFileUrl(JSON.stringify(conf))
 
-    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, downloadConf)
+    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox)
   } else {
     if (displayVcs) {
       wrapper.append(Button('full reboot', () => api('createAppOp', {...app, vcs: displayVcs})))
       wrapper.append(
         Button('delete app', () => api('deleteAppOp', {...app, vcs: displayVcs})),
       )
-      if (additional.supportsOnPremise) {
-        wrapper.append(Button('on-premise dev server', () => add({onPremise: true, vcs: displayVcs, repo: app.repo})))
-      }
     }
   }
   return wrapper
@@ -250,18 +249,18 @@ Header = () => {
 const confHandler = {
   domain: () => {
     root.innerHTML = ''
-    root.append(Form(handleJakeloudDomain, 'assign domain', Field('email'), Field('domain')))
+    root.append(Form(handleJakeloudDomain, 'assign domain', Field('email', 'email'), Field('domain')))
   },
   login: () => {
     root.innerHTML = ''
     root.append(
-      Form(handleLogin, 'login', Field('email'), Field('password')),
-      Form(handleRegister, 'register', Field('email'), Field('password'))
+      Form(handleLogin, 'login', Field('email', 'email'), Field('password', 'password')),
+      Form(handleRegister, 'register', Field('email', 'email'), Field('password', 'password'))
     )
   },
   register: () => {
     root.innerHTML = ''
-    root.append(Form(handleRegister, 'register', Field('email'), Field('password')))
+    root.append(Form(handleRegister, 'register', Field('email', 'email'), Field('password', 'password')))
   }
 }
 

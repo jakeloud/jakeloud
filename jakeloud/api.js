@@ -70,32 +70,9 @@ const createAppOp = async (req, res, body) => {
   if (!await isAuthenticated(body) || !domain || !repo || !name || !email || !vcs) return
   const conf = await getConf()
   const takenPorts = conf.apps.map(app => app.port)
-  const takenSshPorts = conf.apps.map(app => app.sshPort)
   let port = 38000
-  while (takenPorts.includes(port) || takenSshPorts.includes(port)) port++
+  while (takenPorts.includes(port)) port++
   const app = new App({ email, domain, repo, name, port, vcs, additional })
-  await app.save()
-  // run pipeline
-  await app.clone()
-  await app.build()
-  await app.proxy()
-  await app.start()
-  await app.cert()
-}
-
-const createOnPremiseOp = async (req, res, body) => {
-  const { domain, repo, name, email, vcs } = body
-  const dockerOptions = body['docker options']
-  const additional = {dockerOptions, isOnPremise: true}
-  if (!await isAuthenticated(body) || !domain || !repo || !name || !email || !vcs) return
-  const conf = await getConf()
-  const takenPorts = conf.apps.map(app => app.port)
-  const takenSshPorts = conf.apps.map(app => app.sshPort)
-  let port = 38000
-  while (takenPorts.includes(port) || takenSshPorts.includes(port)) port++
-  let sshPort = port + 1
-  while (takenPorts.includes(sshPort) || takenSshPorts.includes(sshPort)) sshPort++
-  const app = new App({ email, domain, repo, name, port, sshPort, vcs, additional })
   await app.save()
   // run pipeline
   await app.clone()
@@ -131,7 +108,6 @@ const ops = {
   registerOp,
   getConfOp,
   createAppOp,
-  createOnPremiseOp,
   deleteAppOp,
   updateJakeloudOp,
 }
