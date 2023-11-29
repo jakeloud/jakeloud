@@ -56,7 +56,7 @@ getApp(JAKELOUD).then(jakeloudApp =>
     jakeloudApp.state = 'building'
     await jakeloudApp.save()
     await jakeloudApp.proxy()
-    if (jakeloudApp.domain) {
+    if (jakeloudApp.email) {
       let app = await getApp(JAKELOUD)
       app.state = 'starting'
       await app.save()

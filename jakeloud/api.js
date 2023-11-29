@@ -5,30 +5,32 @@ const {
 const setJakeloudDomainOp = async (req, res, body) => {
   const { email, domain } = body
   const conf = await getConf()
-  if (!email || !domain || (conf.users.length && !await isAuthenticated(body))) return
+  if (!email || (conf.users.length && !await isAuthenticated(body))) return
 
-  let jakeloudApp = await getApp(JAKELOUD)
+  const jakeloudApp = await getApp(JAKELOUD)
+  if (!domain) {
+    domain = jakeloudApp.domain
+  }
+
   jakeloudApp.domain = domain
   jakeloudApp.email = email
   jakeloudApp.state = 'building'
   await jakeloudApp.save()
   await jakeloudApp.proxy()
-  jakeloudApp = await getApp(JAKELOUD)
-  if (jakeloudApp.domain === domain) {
-    jakeloudApp.state = 'starting'
-    await jakeloudApp.save()
-    await jakeloudApp.cert()
-  }
+
+  await jakeloudApp.loadState()
+  jakeloudApp.state = 'starting'
+  await jakeloudApp.save()
+  await jakeloudApp.cert()
 }
 
 setJakeloudAdditionalOp = async (req, res, body) => {
   const { additional, email } = body
-  const conf = await getConf()
   if (!additional || !await isAuthenticated(body)) return
-  const jakeloudAppIndex = conf.apps.findIndex(a => a.name === JAKELOUD)
-  if (email !== conf.apps[jakeloudAppIndex].owner) return
-  conf.apps[jakeloudAppIndex].additional = additional
-  await setConf(conf)
+  let jakeloudApp = await getApp(JAKELOUD)
+  if (email !== jakeloudApp.email) return
+  jakeloudApp.additional = additional
+  await jakeloudApp.save()
 }
 
 const registerOp = async (req, res, body) => {
@@ -43,7 +45,7 @@ const getConfOp = async (req, res, body) => {
   const conf = await getConf()
   if (!conf.users.length) {
     const jakeloudApp = await getApp(JAKELOUD)
-    if (!jakeloudApp.domain) {
+    if (!jakeloudApp.email) {
       res.write(JSON.stringify({message: 'domain'}))
       return
     }
@@ -83,14 +85,17 @@ const createAppOp = async (req, res, body) => {
 }
 
 const deleteAppOp = async (req, res, body) => {
-  const { name, email } = body
+  const { name } = body
   const app = await getApp(name)
-  if (!await isAuthenticated(body) || !name || !app || !app.email === email) return
+  if (!await isAuthenticated(body) || !name || !app) return
   await app.stop()
 
   let conf = await getConf()
   const isRepoUsedElsewhere = conf.apps.filter(a => a.repo === app.repo).length > 1
   await app.remove(!isRepoUsedElsewhere)
+
+  await app.loadState()
+  if (this.state.startsWith('Error')) return
 
   conf = await getConf()
   conf.apps = conf.apps.filter(a => a.name !== name)

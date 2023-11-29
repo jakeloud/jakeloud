@@ -18,6 +18,12 @@ rm -rf etc/jakeloud/jakeloud
 mkdir -p /etc/jakeloud/jakeloud
 cp -r --remove-destination /jakeloud/jakeloud /etc/jakeloud
 cp /jakeloud/jakeloud.service /etc/systemd/system/jakeloud.service
+if [ ! -f /etc/jakeloud/conf.json ]; then
+  cp /jakeloud/conf.json /etc/jakeloud/conf.json
+  ip -j route get 1
+    | node -p 'JSON.parse(process.argv[1])[0].prefsrc'
+    | xargs -I {} sed -i "s/%serverip%/{}/g" /etc/jakeloud/conf.json
+fi
 
 rm -rf /jakeloud
 
@@ -26,5 +32,5 @@ sudo systemctl daemon-reload
 systemctl enable jakeloud
 systemctl start nginx
 systemctl start jakeloud
-# in case we updated jakeloud
+# in case of update
 systemctl restart jakeloud

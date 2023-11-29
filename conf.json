@@ -1,0 +1,4 @@
+{
+  "apps": [{ "name": "JAKELOUD", "port": 666, "domain": "%serverip%" }],
+  "users": []
+}

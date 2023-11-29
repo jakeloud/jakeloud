@@ -3,11 +3,6 @@ const { exec } = require('child_process')
 const crypto = require('crypto')
 
 const JAKELOUD = 'jakeloud'
-const CONF_FILE = '/etc/jakeloud/conf.json'
-const FALLBACK_CONF = {
-  apps: [{ name: JAKELOUD, port: 666 }],
-  users: [],
-}
 
 const execWrapped = (cmd) =>
   new Promise((resolve, reject) => {
@@ -21,18 +16,16 @@ const updateJakeloud = async () => {
   await execWrapped('sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/jakeloud/jakeloud/main/install.sh)"')
 }
 
-const setConf = (json) => writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
-
+const CONF_FILE = '/etc/jakeloud/conf.json'
+const setConf = (json) => {
+  writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
+}
 const getConf = async () => {
   let conf
   try {
-    if (existsSync(CONF_FILE)) {
-      conf = JSON.parse(readFileSync(CONF_FILE, 'utf8'))
-    } else {
-      conf = FALLBACK_CONF
-    }
+    conf = JSON.parse(readFileSync(CONF_FILE, 'utf8'))
   } catch(e) {
-    conf = FALLBACK_CONF
+    console.error('Problem with conf.json', e)
   }
   conf.apps = conf.apps.map(app => new App(app))
   return conf
@@ -51,13 +44,13 @@ class App {
   }
   async save() {
     const conf = await getConf()
-    if (conf.apps.find(app => app.name === this.name)) {
-      conf.apps = conf.apps.map(app => app.name === this.name ? this : app)
-      await setConf(conf)
-    } else {
+    const appIndex = conf.apps.findIndex(app => app.name === this.name)
+    if (appIndex === -1) {
       conf.apps.push(this)
-      await setConf(conf)
+    } else {
+      conf.apps[appIndex] = this
     }
+    await setConf(conf)
   }
 
   async loadState() {
@@ -109,14 +102,15 @@ class App {
         }
       }`
       
-          const file = this.name === JAKELOUD ? 'default' : this.name
-          writeFileSync(`/etc/nginx/sites-available/${file}`, content)
-          if (!existsSync(`/etc/nginx/sites-enabled/${file}`))
-            linkSync(`/etc/nginx/sites-available/${file}`, `/etc/nginx/sites-enabled/${file}`)
-      
-          // test nginx config for syntax errors
-          await execWrapped(`sudo nginx -t`)
-          await execWrapped(`sudo systemctl restart nginx`)
+      const file = this.name === JAKELOUD ? 'default' : this.name
+      writeFileSync(`/etc/nginx/sites-available/${file}`, content)
+      // test nginx config for syntax errors
+      await execWrapped(`sudo nginx -t`)
+
+      if (!existsSync(`/etc/nginx/sites-enabled/${file}`)) {
+        linkSync(`/etc/nginx/sites-available/${file}`, `/etc/nginx/sites-enabled/${file}`)
+      }
+      await execWrapped(`sudo systemctl restart nginx`)
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -206,7 +200,13 @@ const setUser = async (email, password) => {
   const conf = await getConf()
   const salt = crypto.randomBytes(128).toString('base64')
   const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512')
-  conf.users.push({email, hash, salt})
+  
+  const userIndex = conf.users.findIndex(user => user.email === email)
+  if (userIndex === -1) {
+    conf.users.push({email, hash, salt})
+  } else {
+    conf.users[userIndex] = {email, hash, salt}
+  }
   await setConf(conf)
 }
 
