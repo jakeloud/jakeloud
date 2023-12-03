@@ -109,10 +109,15 @@ owner: ${app.email}
       <label for="a">
       Registration allowed
       </label>`
-    const sshKey = document.createElement('p')
-    sshKey.innerText = `ssh-key:\n${additional['ssh-key']}`
 
-    wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, sshKey)
+    wrapper.append(
+      Button('update jakeloud', handleUpdateJakeloud),
+      registrationCheckbox,
+      `ssh-key:\n${additional['ssh-key']}`,
+      Button('copy', () => {
+        navigator.clipboard.writeText(additional['ssh-key'])
+      }),
+    )
   } else {
     wrapper.append(Button('full reboot', () => api('createAppOp', app)))
     wrapper.append(
