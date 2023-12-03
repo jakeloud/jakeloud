@@ -82,7 +82,7 @@ handleUpdateJakeloud = async () => await api('updateJakeloudOp')
 add = (options = {}) => {
   root.innerHTML = ''
   const p = document.createElement('p')
-  p.innerText = `Enter github repo in a format "<user|org>/<repo>". Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
+  p.innerText = `Enter github repo in a format "git@github.com:<user>/<repo>.git" (as seen in ssh clone option). Example docker options: "-v /home/jakeloud:/home/jakeloud -e PASSWORD=jakeloud"`
   root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('repo'), Field('docker options'), p))
 }
 

@@ -56,25 +56,19 @@ const getConfOp = async (req, res, body) => {
     res.write(JSON.stringify({message: 'login'}))
     return
   }
-  // don't leak token
-  conf.apps = conf.apps.map(app => {
-    if (!app.vcs) return app
-    app.vcs = app.vcs.replace(/:[^@]+/g, '') // user:token@host -> user@host
-    return app
-  })
   res.write(JSON.stringify(conf))
 }
 
 const createAppOp = async (req, res, body) => {
-  const { domain, repo, name, email, vcs } = body
+  const { domain, repo, name, email } = body
   const dockerOptions = body['docker options']
   const additional = {dockerOptions}
-  if (!await isAuthenticated(body) || !domain || !repo || !name || !email || !vcs) return
+  if (!await isAuthenticated(body) || !domain || !repo || !name || !email) return
   const conf = await getConf()
   const takenPorts = conf.apps.map(app => app.port)
   let port = 38000
   while (takenPorts.includes(port)) port++
-  const app = new App({ email, domain, repo, name, port, vcs, additional })
+  const app = new App({ email, domain, repo, name, port, additional })
   await app.save()
   // run pipeline
   await app.clone()

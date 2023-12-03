@@ -32,13 +32,12 @@ const getConf = async () => {
 }
 
 class App {
-  constructor({name, domain, repo, port, state, email, vcs, additional}) {
+  constructor({name, domain, repo, port, state, email, additional}) {
     this.name = name
     this.domain = domain
     this.repo = repo
     this.state = state
     this.email = email
-    this.vcs = vcs
     this.port = port
     this.additional = additional || {}
   }
@@ -53,6 +52,11 @@ class App {
     await setConf(conf)
   }
 
+  // git@github.com:<user>/<repo>.git -> <user>/<repo>
+  get shortRepoPath() {
+    return this.repo.split(':')[1].split('.git')[0]
+  }
+
   async loadState() {
     // this can bring problems, as getConf depends on App constructor
     const app = await getApp(this.name)
@@ -64,8 +68,8 @@ class App {
     this.state = 'cloning'
     await this.save()
     try {
-      await execWrapped(`rm -rf /etc/jakeloud/${this.repo}`)
-      await execWrapped(`git clone https://${this.vcs}/${this.repo}.git /etc/jakeloud/${this.repo}`)
+      await execWrapped(`rm -rf /etc/jakeloud/${this.shortRepoPath}`)
+      await execWrapped(`git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath}`)
     } catch(e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -78,7 +82,7 @@ class App {
     this.state = 'building'
     await this.save()
     try {
-      await execWrapped(`docker build -t ${this.repo.toLowerCase()} /etc/jakeloud/${this.repo}`)
+      await execWrapped(`docker build -t ${this.shortRepoPath.toLowerCase()} /etc/jakeloud/${this.shortRepoPath}`)
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -126,7 +130,7 @@ class App {
       await execWrapped(`if [ -z "$(sudo docker ps -q -f name=${this.name})" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
       const dockerOptions = this.additional.dockerOptions || ''
 
-      await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${dockerOptions} ${this.repo.toLowerCase()}`)
+      await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${dockerOptions} ${this.shortRepoPath.toLowerCase()}`)
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -169,7 +173,7 @@ class App {
         execWrapped(`rm -f /etc/nginx/sites-enabled/${this.name}`),
       ]
       if (removeRepo) {
-        proms.push(execWrapped(`docker image rm ${this.repo.toLowerCase()} && rm -r /etc/jakeloud/${this.repo}`))
+        proms.push(execWrapped(`docker image rm ${this.shortRepoPath.toLowerCase()} && rm -r /etc/jakeloud/${this.shortRepoPath}`))
       }
   
       await Promise.all(proms)
