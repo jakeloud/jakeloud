@@ -26,8 +26,6 @@ fi
 # generate ssh key
 if [ ! -f /etc/jakeloud/id_rsa ]; then
   ssh-keygen -q -t ed25519 -N '' -f /etc/jakeloud/id_rsa
-  eval "$(ssh-agent -s)"
-  ssh-add /etc/jakeloud/id_rsa
   cat /etc/jakeloud/id_rsa.pub | xargs -I {} sed -i "s/%ssh-key%/{}/g" /etc/jakeloud/conf.json
 fi
 

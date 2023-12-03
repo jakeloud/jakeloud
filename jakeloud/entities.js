@@ -54,7 +54,11 @@ class App {
 
   // git@github.com:<user>/<repo>.git -> <user>/<repo>
   get shortRepoPath() {
-    return this.repo.split(':')[1].split('.git')[0]
+    try {
+      return this.repo.split(':')[1].split('.git')[0]
+    } catch (e) {
+      throw new Error('Repo format should be git@github.com:<user>/<repo>.git')
+    }
   }
 
   async loadState() {
@@ -69,7 +73,7 @@ class App {
     await this.save()
     try {
       await execWrapped(`rm -rf /etc/jakeloud/${this.shortRepoPath}`)
-      await execWrapped(`git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath}`)
+      await execWrapped(`ssh-agent sh -s $(ssh-add /etc/jakeloud/id_rsa; git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath})`)
     } catch(e) {
       this.state = `Error: ${e}`
       await this.save()
