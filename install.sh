@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# deps
-apt update && apt install nodejs certbot python3-certbot-nginx curl git nginx -y
+# deps (most useless ---> essential)
+apt update && apt install jq nodejs certbot python3-certbot-nginx curl git nginx -y
 if command -v docker; then
   echo "reusing docker"
 else
@@ -20,9 +20,15 @@ cp -r --remove-destination /jakeloud/jakeloud /etc/jakeloud
 cp /jakeloud/jakeloud.service /etc/systemd/system/jakeloud.service
 if [ ! -f /etc/jakeloud/conf.json ]; then
   cp /jakeloud/conf.json /etc/jakeloud/conf.json
-  ip -j route get 1 \
-    | node -p 'JSON.parse(process.argv[1])[0].prefsrc' \
-    | xargs -I {} sed -i "s/%serverip%/{}/g" /etc/jakeloud/conf.json
+  ip -j route get 1 | jq -r '.[0].prefsrc' | xargs -I {} sed -i "s/%serverip%/{}/g" /etc/jakeloud/conf.json
+fi
+
+# generate ssh key
+if [ ! -f /etc/jakeloud/id_rsa ]; then
+  ssh-keygen -q -t ed25519 -N '' -f /etc/jakeloud/id_rsa
+  eval "$(ssh-agent -s)"
+  ssh-add /etc/jakeloud/id_rsa
+  cat /etc/jakeloud/id_rsa.pub | xargs -I {} sed -i "s/%ssh-key%/{}/g" /etc/jakeloud/conf.json
 fi
 
 rm -rf /jakeloud
