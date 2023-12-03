@@ -110,7 +110,7 @@ owner: ${app.email}
       Registration allowed
       </label>`
     const sshKey = document.createElement('p')
-    sshKey.innerText = `ssh-key: ${additional['ssh-key']}`
+    sshKey.innerText = `ssh-key:\n${additional['ssh-key']}`
 
     wrapper.append(Button('update jakeloud', handleUpdateJakeloud), registrationCheckbox, sshKey)
   } else {
