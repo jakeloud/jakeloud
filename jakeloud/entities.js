@@ -73,7 +73,9 @@ class App {
     await this.save()
     try {
       await execWrapped(`rm -rf /etc/jakeloud/${this.shortRepoPath}`)
-      await execWrapped(`ssh-agent sh -s $(ssh-add /etc/jakeloud/id_rsa; git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath})`)
+      await execWrapped(`eval "$(ssh-agent -s)"
+      ssh-add /etc/jakeloud/id_rsa; git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath}
+      kill $SSH_AGENT_PID`)
     } catch(e) {
       this.state = `Error: ${e}`
       await this.save()
