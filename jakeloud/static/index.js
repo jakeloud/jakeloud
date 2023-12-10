@@ -86,8 +86,8 @@ add = (options = {}) => {
   root.append(Form(handleCreateApp, 'create app', Field('name'), Field('domain'), Field('repo'), Field('docker options'), p))
 }
 
-const handleRegisterAllowed = (registerAllowed) => {
-  api('setJakeloudAdditionalOp', {additional: {registerAllowed}})
+const handleRegisterAllowed = (prevAdditional, registerAllowed) => {
+  api('setJakeloudAdditionalOp', {additional: {...prevAdditional, registerAllowed}})
 }
 
 const App = (app) => {
@@ -105,7 +105,7 @@ owner: ${app.email}
   if (app.name === 'jakeloud') {
     const registrationCheckbox = document.createElement('div')
     registrationCheckbox.innerHTML = `
-      <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick="handleRegisterAllowed(event.target.checked)"/>
+      <input id="a" ${additional.registerAllowed === true ? 'checked' : ''} type="checkbox" onclick='handleRegisterAllowed(${JSON.stringify(additional)}, event.target.checked)'/>
       <label for="a">
       Registration allowed
       </label>`
