@@ -89,7 +89,7 @@ const deleteAppOp = async (req, res, body) => {
   await app.remove(!isRepoUsedElsewhere)
 
   await app.loadState()
-  if (this.state.startsWith('Error')) return
+  if (this.state && this.state.startsWith('Error')) return
 
   conf = await getConf()
   conf.apps = conf.apps.filter(a => a.name !== name)
