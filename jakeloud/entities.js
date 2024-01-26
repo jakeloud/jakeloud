@@ -73,6 +73,8 @@ class App {
     await this.save()
     try {
       await execWrapped(`rm -rf /etc/jakeloud/${this.shortRepoPath}`)
+      // FIXME: here error occurs if server hasn't queried github.com by ssh
+      // it asks for fingerprint
       await execWrapped(`eval "$(ssh-agent -s)"
       ssh-add /etc/jakeloud/id_rsa; git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath}
       kill $SSH_AGENT_PID`)

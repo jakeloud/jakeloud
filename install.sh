@@ -26,6 +26,7 @@ fi
 # generate ssh key
 if [ ! -f /etc/jakeloud/id_rsa ]; then
   ssh-keygen -q -t ed25519 -N '' -f /etc/jakeloud/id_rsa
+  # FIXME wrong sed command for rsa key
   cat /etc/jakeloud/id_rsa.pub | xargs -I {} sed -i "s/%ssh-key%/{}/g" /etc/jakeloud/conf.json
 fi
 
