@@ -80,8 +80,6 @@ const handleCreateApp = async (e) => {
   getConf()
 }
 
-handleUpdateJakeloud = async () => await api('updateJakeloudOp')
-
 add = (options = {}) => {
   root.innerHTML = ''
   const p = document.createElement('p')
@@ -122,7 +120,6 @@ owner: ${app.email}
     const telegramChatForm = Form(handleAttachTg(additional), 'attach telegram', Field('chatId', 'text', additional.chatId))
 
     wrapper.append(
-      Button('update jakeloud', handleUpdateJakeloud),
       registrationCheckbox,
       telegramChatForm,
       `ssh-key:\n${additional['ssh-key']}`,
