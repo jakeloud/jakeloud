@@ -23,13 +23,16 @@ const Button = (text, onClick) => {
   return button
 }
 
-const Field = (name, type='text') => {
+const Field = (name, type='text', initialValue=null) => {
   const field = document.createElement('div')
   const input = document.createElement('input')
   const label = document.createElement('label')
   input.id = name
   input.type = type
   input.name = name
+  if (initialValue != null) {
+    input.value = initialValue
+  }
   label.for = name
   label.innerText = name
   field.append(label, input)
@@ -90,6 +93,12 @@ const handleRegisterAllowed = (prevAdditional, registerAllowed) => {
   api('setJakeloudAdditionalOp', {additional: {...prevAdditional, registerAllowed}})
 }
 
+const handleAttachTg = (prevAdditional) => (e) => {
+  const chatId = e.target.value
+  e.preventDefault()
+  api('setJakeloudAdditionalOp', {additional: {...prevAdditional, chatId}})
+}
+
 const App = (app) => {
   const additional = app.additional ?? {}
 
@@ -109,10 +118,12 @@ owner: ${app.email}
       <label for="a">
       Registration allowed
       </label>`
+    const telegramChatForm = Form(handleAttachTg(additional), 'attach telegram', Field('chatId', 'text', additional.chatId))
 
     wrapper.append(
       Button('update jakeloud', handleUpdateJakeloud),
       registrationCheckbox,
+      telegramChatForm,
       `ssh-key:\n${additional['ssh-key']}`,
       Button('copy', () => {
         navigator.clipboard.writeText(additional['ssh-key'])
