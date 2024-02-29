@@ -1,5 +1,5 @@
 const {
-  App, getApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated, updateJakeloud,
+  App, getApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated
 } = require('./entities.js')
 
 const setJakeloudDomainOp = async (req, res, body) => {
@@ -96,11 +96,6 @@ const deleteAppOp = async (req, res, body) => {
   await setConf(conf)
 }
 
-const updateJakeloudOp = async (req, res, body) => {
-  if (!await isAuthenticated(body)) return
-  updateJakeloud()
-}
-
 const ops = {
   setJakeloudDomainOp,
   setJakeloudAdditionalOp,
@@ -108,7 +103,6 @@ const ops = {
   getConfOp,
   createAppOp,
   deleteAppOp,
-  updateJakeloudOp,
 }
 
 const api = async (req, res, body) => {

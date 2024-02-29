@@ -12,10 +12,6 @@ const execWrapped = (cmd) =>
     })
   })
 
-const updateJakeloud = async () => {
-  await execWrapped('sudo sh -c "$(curl --silent -fsSL https://raw.githubusercontent.com/jakeloud/jakeloud/main/install.sh)"')
-}
-
 const CONF_FILE = '/etc/jakeloud/conf.json'
 const setConf = (json) => {
   writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
@@ -230,5 +226,4 @@ module.exports = {
   setConf,
   isAuthenticated,
   setUser,
-  updateJakeloud,
 }

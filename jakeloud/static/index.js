@@ -93,9 +93,10 @@ const handleRegisterAllowed = (prevAdditional, registerAllowed) => {
   api('setJakeloudAdditionalOp', {additional: {...prevAdditional, registerAllowed}})
 }
 
-const handleAttachTg = (prevAdditional) => (e) => {
-  const chatId = e.target.value
+const handleAttachTg = (prevAdditional) => async (e) => {
+  const data = new FormData(e.target)
   e.preventDefault()
+  const chatId = formDataToJSON(data).chatId
   api('setJakeloudAdditionalOp', {additional: {...prevAdditional, chatId}})
 }
 
