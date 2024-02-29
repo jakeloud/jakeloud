@@ -1,4 +1,4 @@
-const http = require('http')
+const http = require('https')
 const { getApp, JAKELOUD } = require('./entities.js')
 
 const log = async (message = 'message unspecified') => {
@@ -12,13 +12,16 @@ const log = async (message = 'message unspecified') => {
 
   if (!botToken || !chatId) return
 
+
+  const path = `/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`
   const options = {
     hostname: 'api.telegram.org',
-    path: `/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`,
+    path: encodeURI(path),
     method: 'GET',
   }
 
   const req = http.request(options, (res) => {})
+  req.end()
 }
 
 module.exports = { log }
