@@ -94,8 +94,7 @@ const handleRegisterAllowed = (prevAdditional, registerAllowed) => {
 const handleAttachTg = (prevAdditional) => async (e) => {
   const data = new FormData(e.target)
   e.preventDefault()
-  const chatId = formDataToJSON(data).chatId
-  api('setJakeloudAdditionalOp', {additional: {...prevAdditional, chatId}})
+  api('setJakeloudAdditionalOp', {additional: {...prevAdditional, ...formDataToJSON(data)}})
 }
 
 const App = (app) => {
@@ -117,7 +116,7 @@ owner: ${app.email}
       <label for="a">
       Registration allowed
       </label>`
-    const telegramChatForm = Form(handleAttachTg(additional), 'attach telegram', Field('chatId', 'text', additional.chatId))
+    const telegramChatForm = Form(handleAttachTg(additional), 'attach telegram', Field('chatId', 'text', additional.chatId), Field('botToken', 'text', additional.botToken))
 
     wrapper.append(
       registrationCheckbox,

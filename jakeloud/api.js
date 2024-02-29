@@ -1,6 +1,9 @@
 const {
   App, getApp, JAKELOUD, getConf, setConf, setUser, isAuthenticated
 } = require('./entities.js')
+const {
+  log,
+} = require('./logger.js')
 
 const setJakeloudDomainOp = async (req, res, body) => {
   const { email, domain } = body
@@ -60,6 +63,7 @@ const getConfOp = async (req, res, body) => {
 }
 
 const createAppOp = async (req, res, body) => {
+  const startTime = Date.now()
   const { domain, repo, name, email } = body
   const dockerOptions = body['docker options']
   const additional = {dockerOptions}
@@ -76,6 +80,10 @@ const createAppOp = async (req, res, body) => {
   await app.proxy()
   await app.start()
   await app.cert()
+
+  const endTime = Date.now()
+  const dt = Math.ceil((endTime - startTime)/1000)
+  await log(`App ${name} started. took ${dt}s`)
 }
 
 const deleteAppOp = async (req, res, body) => {
