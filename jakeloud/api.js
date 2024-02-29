@@ -83,7 +83,7 @@ const createAppOp = async (req, res, body) => {
 
   const endTime = Date.now()
   const dt = Math.ceil((endTime - startTime)/1000)
-  await log(`App ${name} started. took ${dt}s`)
+  await log(`*${name}* started\\. _${dt}s_`)
 }
 
 const deleteAppOp = async (req, res, body) => {

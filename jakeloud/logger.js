@@ -13,7 +13,7 @@ const log = async (message = 'message unspecified') => {
   if (!botToken || !chatId) return
 
 
-  const path = `/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`
+  const path = `/bot${botToken}/sendMessage?chat_id=${chatId}&parse_mode=MarkdownV2&text=${message}`
   const options = {
     hostname: 'api.telegram.org',
     path: encodeURI(path),
