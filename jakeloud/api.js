@@ -83,7 +83,13 @@ const createAppOp = async (req, res, body) => {
 
   const endTime = Date.now()
   const dt = Math.ceil((endTime - startTime)/1000)
-  await log(`*${name}* started\\. _${dt}s_`)
+
+  await app.loadState()
+  if (app.state.startsWith('Error')) {
+    await log(`*${name}* Failed to start\\. _${dt}s_`)
+  } else {
+    await log(`*${name}* started\\. _${dt}s_`)
+  }
 }
 
 const deleteAppOp = async (req, res, body) => {
