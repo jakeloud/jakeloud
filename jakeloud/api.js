@@ -18,13 +18,7 @@ const setJakeloudDomainOp = async (req, res, body) => {
   jakeloudApp.domain = domain
   jakeloudApp.email = email
   jakeloudApp.state = 'building'
-  await jakeloudApp.save()
-  await jakeloudApp.proxy()
-
-  await jakeloudApp.loadState()
-  jakeloudApp.state = 'starting'
-  await jakeloudApp.save()
-  await jakeloudApp.cert()
+  await jakeloudApp.advance()
 }
 
 setJakeloudAdditionalOp = async (req, res, body) => {
@@ -74,12 +68,7 @@ const createAppOp = async (req, res, body) => {
   while (takenPorts.includes(port)) port++
   const app = new App({ email, domain, repo, name, port, additional })
   await app.save()
-  // run pipeline
-  await app.clone()
-  await app.build()
-  await app.proxy()
-  await app.start()
-  await app.cert()
+  await app.advance(true)
 
   const endTime = Date.now()
   const dt = Math.ceil((endTime - startTime)/1000)
@@ -101,13 +90,6 @@ const deleteAppOp = async (req, res, body) => {
   let conf = await getConf()
   const isRepoUsedElsewhere = conf.apps.filter(a => a.repo === app.repo).length > 1
   await app.remove(!isRepoUsedElsewhere)
-
-  await app.loadState()
-  if (this.state && this.state.startsWith('Error')) return
-
-  conf = await getConf()
-  conf.apps = conf.apps.filter(a => a.name !== name)
-  await setConf(conf)
 }
 
 const ops = {

@@ -1,6 +1,0 @@
-{
-  "apps": [
-    { "name": "jakeloud", "port": 666, "domain": "%serverip%", "additional": { "ssh-key": "%ssh-key%" } }
-  ],
-  "users": []
-}

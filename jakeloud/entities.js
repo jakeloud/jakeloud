@@ -2,17 +2,9 @@ const { readFileSync, writeFileSync, existsSync, linkSync } = require('fs')
 const { exec } = require('child_process')
 const crypto = require('crypto')
 
-const JAKELOUD = 'jakeloud'
-
-const execWrapped = (cmd) =>
-  new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) reject(error)
-      else resolve(stdout)
-    })
-  })
 
 const CONF_FILE = '/etc/jakeloud/conf.json'
+
 const setConf = (json) => {
   writeFileSync(CONF_FILE, JSON.stringify(json, null, 2))
 }
@@ -26,6 +18,43 @@ const getConf = async () => {
   conf.apps = conf.apps.map(app => new App(app))
   return conf
 }
+
+const execWrapped = (cmd) =>
+  new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) reject(error)
+      else resolve(stdout)
+    })
+  })
+
+// TODO: rewrite this initializer to update statuses and refresh apps and/or continue installation app
+const start = async (server) => {
+  const jakeloudApp = await getApp(JAKELOUD)
+
+  if (!existsSync(`/etc/jakeloud/id_rsa`)) {
+    await execWrapped(`ssh-keygen -q -t ed25519 -N '' -f /etc/jakeloud/id_rsa`)
+  }
+  const sshKey = readFileSync('/etc/jakeloud/id_rsa.pub', 'utf8')
+  const additional = jakeloudApp.additional || {}
+  additional.sshKey = sshKey
+  jakeloudApp.additional = additional
+  await jakeloudApp.save()
+
+  server.listen(jakeloudApp.port || 666, async () => {
+    jakeloudApp.port = server.address().port
+    jakeloudApp.state = 'building'
+    await jakeloudApp.save()
+    await jakeloudApp.proxy()
+    if (jakeloudApp.email) {
+      let app = await getApp(JAKELOUD)
+      app.state = 'starting'
+      await app.save()
+      await app.cert()
+    }
+  })
+}
+
+const JAKELOUD = 'jakeloud'
 
 class App {
   constructor({name, domain, repo, port, state, email, additional}) {
@@ -181,10 +210,42 @@ class App {
       }
   
       await Promise.all(proms)
+
+      const conf = await getConf()
+      conf.apps = conf.apps.filter(a => a.name !== this.name)
+      await setConf(conf)
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
     }
+  }
+
+  isError() {
+    return this.state && this.state.startsWith('Error')
+  }
+
+  async advance(force = false) {
+    if (this.state == '🟢 running' || this.isError()) {
+      if (!force) return
+    }
+    switch (this.state) {
+      case 'cloning':
+        await this.build()
+        break
+      case 'building':
+        await this.proxy()
+        break
+      case 'proxying':
+        await this.start()
+        break
+      case 'starting':
+        await this.cert()
+        break
+      default:
+        await this.clone()
+        break
+    }
+    await this.advance()
   }
 }
 
@@ -226,4 +287,5 @@ module.exports = {
   setConf,
   isAuthenticated,
   setUser,
+  start,
 }

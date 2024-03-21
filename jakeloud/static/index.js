@@ -121,9 +121,9 @@ owner: ${app.email}
     wrapper.append(
       registrationCheckbox,
       telegramChatForm,
-      `ssh-key:\n${additional['ssh-key']}`,
+      `ssh-key:\n${additional.sshKey}`,
       Button('copy', () => {
-        navigator.clipboard.writeText(additional['ssh-key'])
+        navigator.clipboard.writeText(additional.sshKey)
       }),
     )
   } else {

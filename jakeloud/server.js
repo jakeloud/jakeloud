@@ -3,7 +3,7 @@ const url = require('url')
 const path = require('path')
 const { readFileSync } = require('fs')
 
-const { getApp, JAKELOUD } = require('./entities.js')
+const { start } = require('./entities.js')
 const { api } = require('./api.js')
 
 const fileCache = {}
@@ -49,18 +49,4 @@ const server = http.createServer(async (req, res) => {
   res.end()
 })
 
-// TODO: rewrite this initializer to update statuses and refresh apps and/or continue installation app
-getApp(JAKELOUD).then(jakeloudApp =>
-  server.listen(jakeloudApp.port, async () => {
-    jakeloudApp.port = server.address().port
-    jakeloudApp.state = 'building'
-    await jakeloudApp.save()
-    await jakeloudApp.proxy()
-    if (jakeloudApp.email) {
-      let app = await getApp(JAKELOUD)
-      app.state = 'starting'
-      await app.save()
-      await app.cert()
-    }
-  })
-)
+start(server)
