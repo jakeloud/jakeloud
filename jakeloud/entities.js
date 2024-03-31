@@ -48,11 +48,11 @@ const start = async (server) => {
     jakeloudApp.state = 'building'
     await jakeloudApp.save()
     await jakeloudApp.proxy()
+    await jakeloudApp.loadState()
     if (jakeloudApp.email) {
-      let app = await getApp(JAKELOUD)
-      app.state = 'starting'
-      await app.save()
-      await app.cert()
+      jakeloudApp.state = 'starting'
+      await jakeloudApp.save()
+      await jakeloudApp.cert()
     }
   })
 }

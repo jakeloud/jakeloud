@@ -13,9 +13,16 @@ const setJakeloudDomain = async ({ email, password, domain }) => {
 
   jakeloudApp.domain = domain
   jakeloudApp.email = email
+
   jakeloudApp.state = 'building'
   await jakeloudApp.save()
-  await jakeloudApp.advance()
+  await jakeloudApp.proxy()
+  await jakeloudApp.loadState()
+  if (jakeloudApp.email) {
+    jakeloudApp.state = 'starting'
+    await jakeloudApp.save()
+    await jakeloudApp.cert()
+  }
 }
 
 module.exports = setJakeloudDomain
