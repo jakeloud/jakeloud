@@ -130,7 +130,7 @@ class App {
     try {
       const content = `
       server {
-        listen 80;
+        listen 80 http2;
         server_name ${this.domain};
       
         location / {
