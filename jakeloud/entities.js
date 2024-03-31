@@ -101,7 +101,7 @@ class App {
       // FIXME: here error occurs if server hasn't queried github.com by ssh
       // it asks for fingerprint
       await execWrapped(`eval "$(ssh-agent -s)"
-      ssh-add /etc/jakeloud/id_rsa; git clone ${this.repo} /etc/jakeloud/${this.shortRepoPath}
+      ssh-add /etc/jakeloud/id_rsa; git clone --depth 1 ${this.repo} /etc/jakeloud/${this.shortRepoPath}
       kill $SSH_AGENT_PID`)
     } catch(e) {
       this.state = `Error: ${e}`
@@ -254,9 +254,8 @@ const getApp = async (name) => {
   return apps.find(app => app.name === name)
 }
 
-const isAuthenticated = async (body) => {
+const isAuthenticated = async ({ password, email }) => {
   const { users } = await getConf()
-  const { password, email } = body
   if (users.length === 0 || !password || !email) return false
   const user = users.find(u => u.email === email)
   if (!user) return false

@@ -5,12 +5,10 @@ const {
   log,
 } = require('../logger.js')
 
-const createApp = async (body) => {
+const createApp = async ({ domain, repo, name, dockerOptions, password, email }) => {
   const startTime = Date.now()
-  const { domain, repo, name, email } = body
-  const dockerOptions = body['docker options']
   const additional = {dockerOptions}
-  if (!await isAuthenticated(body) || !domain || !repo || !name || !email) return
+  if (!await isAuthenticated({ password, email }) || !domain || !repo || !name || !email) return
   const conf = await getConf()
   const takenPorts = conf.apps.map(app => app.port)
   let port = 38000

@@ -2,10 +2,9 @@ const {
   getApp, JAKELOUD, getConf, isAuthenticated
 } = require('../entities.js')
 
-const setJakeloudDomain = async (body) => {
-  const { email, domain } = body
+const setJakeloudDomain = async ({ email, password, domain }) => {
   const conf = await getConf()
-  if (!email || (conf.users.length && !await isAuthenticated(body))) return
+  if (!email || (conf.users.length && !await isAuthenticated({email, password}))) return
 
   const jakeloudApp = await getApp(JAKELOUD)
   if (!domain) {

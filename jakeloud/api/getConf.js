@@ -2,7 +2,7 @@ const {
   getApp, JAKELOUD, getConf, isAuthenticated
 } = require('../entities.js')
 
-const _getConf = async (body) => {
+const _getConf = async ({email, password}) => {
   const conf = await getConf()
   if (!conf.users.length) {
     const jakeloudApp = await getApp(JAKELOUD)
@@ -11,7 +11,7 @@ const _getConf = async (body) => {
     }
     return {message: 'register'}
   }
-  if (!await isAuthenticated(body)) {
+  if (!await isAuthenticated({email, password})) {
     return {message: 'login'}
   }
   return conf

@@ -2,10 +2,9 @@ const {
   getApp, getConf, isAuthenticated
 } = require('../entities.js')
 
-const deleteApp = async (body) => {
-  const { name } = body
+const deleteApp = async ({name, email, password}) => {
   const app = await getApp(name)
-  if (!await isAuthenticated(body) || !name || !app) return
+  if (!await isAuthenticated({email, password}) || !name || !app) return
   await app.stop()
 
   let conf = await getConf()
