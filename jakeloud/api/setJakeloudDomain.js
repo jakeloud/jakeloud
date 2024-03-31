@@ -14,6 +14,7 @@ const setJakeloudDomain = async ({ email, password, domain }) => {
   jakeloudApp.domain = domain
   jakeloudApp.email = email
   jakeloudApp.state = 'building'
+  await jakeloudApp.save()
   await jakeloudApp.advance()
 }
 
