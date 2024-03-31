@@ -3,6 +3,8 @@ const { exec } = require('child_process')
 const crypto = require('crypto')
 
 
+const JAKELOUD = 'jakeloud'
+
 const CONF_FILE = '/etc/jakeloud/conf.json'
 
 const setConf = (json) => {
@@ -14,6 +16,7 @@ const getConf = async () => {
     conf = JSON.parse(readFileSync(CONF_FILE, 'utf8'))
   } catch(e) {
     console.error('Problem with conf.json', e)
+    conf = { apps: [{name: JAKELOUD, port: 666}], users: [] }
   }
   conf.apps = conf.apps.map(app => new App(app))
   return conf
@@ -53,8 +56,6 @@ const start = async (server) => {
     }
   })
 }
-
-const JAKELOUD = 'jakeloud'
 
 class App {
   constructor({name, domain, repo, port, state, email, additional}) {
