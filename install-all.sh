@@ -23,6 +23,7 @@ git clone https://github.com/jakeloud/jakeloud.git /jakeloud
 rm -rf etc/jakeloud/jakeloud
 
 mkdir -p /etc/jakeloud/jakeloud
+touch /etc/jakeloud/conf.json
 cp -r --remove-destination /jakeloud/jakeloud /etc/jakeloud
 cp /jakeloud/jakeloud.service /etc/systemd/system/jakeloud.service
 
