@@ -29,6 +29,9 @@ cp /jakeloud/jakeloud.service /etc/systemd/system/jakeloud.service
 
 rm -rf /jakeloud
 
+# for github VCS ssh pulling
+ssh github.com
+
 sudo systemctl daemon-reload
 
 systemctl enable jakeloud
