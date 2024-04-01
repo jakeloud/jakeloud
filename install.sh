@@ -19,4 +19,4 @@ systemctl enable jakeloud
 systemctl start jakeloud
 # in case of update
 systemctl restart jakeloud
-
+systemctl restart nginx
