@@ -143,12 +143,12 @@ class App {
       const file = this.name === JAKELOUD ? 'default' : this.name
       writeFileSync(`/etc/nginx/sites-available/${file}`, content)
       // test nginx config for syntax errors
-      await execWrapped(`sudo nginx -t`)
+      await execWrapped(`nginx -t`)
 
       if (!existsSync(`/etc/nginx/sites-enabled/${file}`)) {
         linkSync(`/etc/nginx/sites-available/${file}`, `/etc/nginx/sites-enabled/${file}`)
       }
-      await execWrapped(`sudo systemctl restart nginx`)
+      await execWrapped(`systemctl restart nginx`)
     } catch (e) {
       this.state = `Error: ${e}`
       await this.save()
@@ -161,7 +161,7 @@ class App {
     this.state = 'starting'
     await this.save()
     try {
-      await execWrapped(`if [ -z "$(sudo docker ps -q -f name=${this.name})" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
+      await execWrapped(`if [ -z "$(docker ps -q -f name=${this.name})" ]; then echo "starting first time"; else docker stop ${this.name} && docker rm ${this.name}; fi`)
       const dockerOptions = this.additional.dockerOptions || ''
 
       await execWrapped(`docker run --name ${this.name} -d -p ${this.port}:80 ${dockerOptions} ${this.shortRepoPath.toLowerCase()}`)
