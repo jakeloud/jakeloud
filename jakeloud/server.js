@@ -3,7 +3,7 @@ const url = require('url')
 const path = require('path')
 const { readFileSync } = require('fs')
 
-const { start } = require('./entities.js')
+const start = require('./api/#start.js')
 const { api } = require('./api.js')
 
 const fileCache = {}

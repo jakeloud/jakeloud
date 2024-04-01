@@ -13,7 +13,7 @@ cp /jakeloud/jakeloud.service /etc/systemd/system/jakeloud.service
 
 rm -rf /jakeloud
 
-sudo systemctl daemon-reload
+systemctl daemon-reload
 
 systemctl enable jakeloud
 systemctl start jakeloud
