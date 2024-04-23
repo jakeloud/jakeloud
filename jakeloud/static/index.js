@@ -99,6 +99,9 @@ const handleAttachTg = (prevAdditional) => async (e) => {
 
 const App = (app) => {
   const additional = app.additional ?? {}
+  if (additional.dockerOptions) {
+    app.dockerOptions = additional.dockerOptions
+  }
 
   const wrapper = document.createElement('div')
   const info = document.createElement('pre')
