@@ -4,6 +4,7 @@ const registerOp = require('./api/register.js')
 const getConfOp = require('./api/getConf.js')
 const createAppOp = require('./api/createApp.js')
 const deleteAppOp = require('./api/deleteApp.js')
+const clearCacheOp = require('./api/clearCache.js')
 
 const ops = {
   setJakeloudDomainOp,
@@ -12,6 +13,7 @@ const ops = {
   getConfOp,
   createAppOp,
   deleteAppOp,
+  clearCacheOp,
 }
 
 const api = async (req, res, body) => {

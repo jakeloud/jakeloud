@@ -30,6 +30,15 @@ const execWrapped = (cmd) =>
     })
   })
 
+const clearCache = async () => {
+  try {
+    const res = await execWrapped('docker system prune -af')
+    return res
+  } catch (e) {
+    return e.message
+  }
+}
+
 // TODO: rewrite this initializer to update statuses and refresh apps and/or continue installation app
 const start = async (server) => {
   const jakeloudApp = await getApp(JAKELOUD)
@@ -137,6 +146,10 @@ class App {
           proxy_set_header   X-Forwarded-For $remote_addr;
           proxy_set_header   Host $host;
           proxy_pass         http://127.0.0.1:${this.port};
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
         }
       }`
       
@@ -288,4 +301,5 @@ module.exports = {
   isAuthenticated,
   setUser,
   start,
+  clearCache,
 }

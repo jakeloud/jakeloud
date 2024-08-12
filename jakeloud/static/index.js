@@ -91,6 +91,10 @@ const handleRegisterAllowed = (prevAdditional, registerAllowed) => {
   api('setJakeloudAdditionalOp', {additional: {...prevAdditional, registerAllowed}})
 }
 
+const handleClearCache = () => {
+  api('clearCacheOp')
+}
+
 const handleAttachTg = (prevAdditional) => async (e) => {
   const data = new FormData(e.target)
   e.preventDefault()
@@ -128,6 +132,7 @@ owner: ${app.email}
       Button('copy', () => {
         navigator.clipboard.writeText(additional.sshKey)
       }),
+      Button('clear cache', handleClearCache),
     )
   } else {
     wrapper.append(Button('full reboot', () => api('createAppOp', app)))
