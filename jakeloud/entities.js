@@ -215,7 +215,7 @@ class App {
     await this.save()
     try {
       const proms = [
-        execWrapped(`docker rm ${this.name.toLowerCase()}`),
+        execWrapped(`docker rm ${this.name}`),
         execWrapped(`rm -f /etc/nginx/sites-available/${this.name}`),
         execWrapped(`rm -f /etc/nginx/sites-enabled/${this.name}`),
       ]
